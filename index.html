@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Portal de Consultas Estudiantiles · Dirección de Bienestar · UNM</title>
+  <meta name="description" content="Portal de consultas sobre Becas, Boleto Estudiantil y Estacionamiento de la Dirección de Bienestar de la Universidad Nacional de Moreno." />
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+
+  <!-- ===== HEADER ===== -->
+  <header class="site-header">
+    <div class="header-inner">
+      <!-- Logo: si no existe logo.png se muestra el ícono de texto -->
+      <img
+        src="logo.png"
+        alt="Universidad Nacional de Moreno"
+        class="header-logo"
+        onerror="this.style.display='none'; document.getElementById('logo-placeholder').style.display='flex';"
+      />
+      <div id="logo-placeholder" class="header-logo-placeholder" style="display:none;">🎓</div>
+
+      <div class="header-titles">
+        <div class="title">Dirección de Bienestar · Universidad Nacional de Moreno</div>
+        <div class="subtitle">Portal de Consultas Estudiantiles</div>
+      </div>
+
+      <nav class="header-nav" aria-label="Navegación principal">
+        <a href="index.html" class="active">Inicio</a>
+        <a href="becas.html">Becas</a>
+        <a href="boleto.html">Boleto</a>
+        <a href="estacionamiento.html">Estacionamiento</a>
+      </nav>
+      <button class="header-menu-btn" id="menu-btn" aria-label="Abrir menú">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </header>
+  <nav class="mobile-nav" id="mobile-nav" aria-label="Menú mobile">
+    <a href="index.html" class="active">Inicio</a>
+    <a href="becas.html">Becas</a>
+    <a href="boleto.html">Boleto</a>
+    <a href="estacionamiento.html">Estacionamiento</a>
+  </nav>
+
+  <!-- ===== HERO ===== -->
+  <section class="hero" aria-label="Bienvenida">
+    <div class="hero-content">
+      <div class="hero-chip">✦ Universidad Nacional de Moreno</div>
+      <h1>Portal de Consultas<br>Estudiantiles</h1>
+      <p>Resolvé tus dudas sobre Becas, Boleto Estudiantil y Estacionamiento de manera rápida y sin esperas.</p>
+    </div>
+    <div class="hero-divider"></div>
+  </section>
+
+  <!-- ===== MAIN ===== -->
+  <main>
+    <div class="container">
+      <section class="section" aria-label="Servicios disponibles">
+
+        <div class="section-intro">
+          <h2>¿Sobre qué necesitás consultar?</h2>
+          <p>Seleccioná el servicio y te guiamos paso a paso.</p>
+          <div class="section-divider"></div>
+        </div>
+
+        <!-- Tarjetas principales -->
+        <div class="cards-grid">
+
+          <!-- Becas -->
+          <a href="becas.html" class="card" aria-label="Ir a Becas">
+            <div class="card-icon" aria-hidden="true">🎓</div>
+            <div class="card-title">Becas</div>
+            <p class="card-desc">
+              Conocé los requisitos para acceder a las becas de ayuda económica,
+              material didáctico, transporte y otras líneas disponibles en la
+              convocatoria vigente.
+            </p>
+            <span class="card-link">Ver guía de becas</span>
+          </a>
+
+          <!-- Boleto Estudiantil -->
+          <a href="boleto.html" class="card" aria-label="Ir a Boleto Estudiantil">
+            <div class="card-icon" aria-hidden="true">🚌</div>
+            <div class="card-title">Boleto Estudiantil</div>
+            <p class="card-desc">
+              Verificá si cumplís los requisitos para acceder al boleto estudiantil
+              gratuito, desde la inscripción hasta la vinculación de tu SUBE con
+              tu legajo universitario.
+            </p>
+            <span class="card-link">Ver guía del boleto</span>
+          </a>
+
+          <!-- Estacionamiento -->
+          <a href="estacionamiento.html" class="card" aria-label="Ir a Estacionamiento">
+            <div class="card-icon" aria-hidden="true">🅿️</div>
+            <div class="card-title">Estacionamiento</div>
+            <p class="card-desc">
+              Informate sobre los sectores de estacionamiento disponibles en el
+              campus para autos, motos y bicicletas, y los requisitos para
+              acceso preferencial.
+            </p>
+            <span class="card-link">Ver guía de estacionamiento</span>
+          </a>
+
+        </div>
+      </section>
+
+      <!-- CTA consulta libre -->
+      <div class="cta-banner" role="complementary" aria-label="Consulta libre">
+        <div>
+          <h3>¿No encontrás lo que buscás?</h3>
+          <p>Envianos tu consulta y el equipo de Bienestar te responde a la brevedad. También podés visitar el <a href="https://www.unm.edu.ar/?extension=bienestar-y-asuntos-estudiantiles" target="_blank" rel="noopener">sitio oficial de Bienestar y Asuntos Estudiantiles</a>.</p>
+        </div>
+        <a href="#consulta-libre" class="btn btn-primary btn-lg" id="open-free-form">
+          Hacer una consulta
+        </a>
+      </div>
+
+    </div>
+
+    <!-- Formulario de consulta libre -->
+    <div class="container" id="consulta-libre">
+      <section id="contact-form-section" class="form-section hidden" aria-label="Formulario de consulta">
+        <h3>Envianos tu consulta</h3>
+        <p>Completá el formulario y el equipo de la Dirección de Bienestar se comunicará con vos.</p>
+
+        <form id="contact-form" novalidate>
+          <div class="form-grid">
+
+            <div class="form-group">
+              <label for="nombre">Nombre <span class="req">*</span></label>
+              <input type="text" id="nombre" name="nombre" placeholder="Tu nombre" required autocomplete="given-name" />
+              <span class="field-error" data-error="nombre">Este campo es obligatorio.</span>
+            </div>
+
+            <div class="form-group">
+              <label for="apellido">Apellido <span class="req">*</span></label>
+              <input type="text" id="apellido" name="apellido" placeholder="Tu apellido" required autocomplete="family-name" />
+              <span class="field-error" data-error="apellido">Este campo es obligatorio.</span>
+            </div>
+
+            <div class="form-group">
+              <label for="dni">DNI <span class="req">*</span></label>
+              <input type="text" id="dni" name="dni" placeholder="Ej: 38123456" required inputmode="numeric" maxlength="8" />
+              <span class="field-error" data-error="dni">Ingresá un DNI válido (7 u 8 dígitos).</span>
+            </div>
+
+            <div class="form-group">
+              <label for="area">Área de consulta <span class="req">*</span></label>
+              <select id="area" name="area" required>
+                <option value="">Seleccioná un área</option>
+                <option value="Becas">Becas</option>
+                <option value="Boleto Estudiantil">Boleto Estudiantil</option>
+                <option value="Estacionamiento">Estacionamiento</option>
+                <option value="Otra">Otra</option>
+              </select>
+              <span class="field-error" data-error="area">Seleccioná un área.</span>
+            </div>
+
+            <div class="form-group full">
+              <label for="descripcion">Descripción de tu consulta <span class="req">*</span></label>
+              <textarea id="descripcion" name="descripcion" placeholder="Describí tu consulta con el mayor detalle posible..." required></textarea>
+              <span class="field-error" data-error="descripcion">Este campo es obligatorio.</span>
+            </div>
+
+          </div>
+
+          <div class="form-submit">
+            <button type="submit" class="btn btn-primary">Enviar consulta</button>
+            <span class="form-mail-hint">
+              También podés escribirnos directamente a
+              <a href="mailto:proyecto.bienestar.moreno@gmail.com">proyecto.bienestar.moreno@gmail.com</a>
+            </span>
+          </div>
+        </form>
+
+        <!-- Mensaje de confirmación (se muestra tras enviar) -->
+        <div class="form-confirm" role="alert" aria-live="polite">
+          <span class="confirm-icon">✅</span>
+          <h3>¡Consulta recibida!</h3>
+          <p>Tu consulta fue registrada correctamente. El equipo de Bienestar se comunicará con vos a la brevedad.</p>
+          <p>
+            Si preferís, también podés enviarnos un mail a
+            <a href="mailto:proyecto.bienestar.moreno@gmail.com" class="mailto-link">proyecto.bienestar.moreno@gmail.com</a>
+          </p>
+          <a href="index.html" class="btn btn-outline mt-2">Volver al inicio</a>
+        </div>
+
+      </section>
+    </div>
+  </main>
+
+  <!-- ===== FOOTER ===== -->
+  <footer class="site-footer" role="contentinfo">
+    <div class="footer-inner">
+      <div class="footer-col">
+        <h4>Dirección de Bienestar</h4>
+        <p>Universidad Nacional de Moreno</p>
+        <p>Av. Bme. Mitre 1891</p>
+        <p>Moreno, Buenos Aires</p>
+      </div>
+      <div class="footer-col">
+        <h4>Contacto</h4>
+        <li><a href="mailto:proyecto.bienestar.moreno@gmail.com">proyecto.bienestar.moreno@gmail.com</a></li>
+        <li>Lunes a Viernes · 9:00 a 17:00 hs</li>
+      </div>
+      <div class="footer-col">
+        <h4>Servicios</h4>
+        <li><a href="becas.html">Becas estudiantiles</a></li>
+        <li><a href="boleto.html">Boleto Estudiantil</a></li>
+        <li><a href="estacionamiento.html">Estacionamiento</a></li>
+      </div>
+      <div class="footer-col">
+        <h4>Institucional</h4>
+        <li><a href="https://www.unm.edu.ar" target="_blank" rel="noopener">Sitio oficial UNM</a></li>
+        <li><a href="https://www.unm.edu.ar/?extension=bienestar-y-asuntos-estudiantiles" target="_blank" rel="noopener">Bienestar y Asuntos Estudiantiles</a></li>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      © <span id="year"></span> Universidad Nacional de Moreno · Dirección de Bienestar
+    </div>
+  </footer>
+
+  <script src="js/app.js"></script>
+  <script>
+    // Año dinámico en el footer
+    document.getElementById('year').textContent = new Date().getFullYear();
+
+    // Botón "Hacer una consulta" → muestra y hace scroll al formulario
+    document.getElementById('open-free-form').addEventListener('click', function (e) {
+      e.preventDefault();
+      const section = document.getElementById('contact-form-section');
+      section.classList.remove('hidden');
+      setTimeout(function () {
+        section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 50);
+    });
+
+    // Inicializar formulario de contacto (área: Otra por defecto desde home)
+    initContactForm('contact-form', 'Otra');
+  </script>
+</body>
+</html>

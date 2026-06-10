@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Boleto Estudiantil · Dirección de Bienestar · UNM</title>
+  <meta name="description" content="Guía interactiva para consultas sobre el Boleto Estudiantil en la Universidad Nacional de Moreno." />
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+
+  <!-- ===== HEADER ===== -->
+  <header class="site-header">
+    <div class="header-inner">
+      <img
+        src="logo.png"
+        alt="Universidad Nacional de Moreno"
+        class="header-logo"
+        onerror="this.style.display='none'; document.getElementById('logo-placeholder').style.display='flex';"
+      />
+      <div id="logo-placeholder" class="header-logo-placeholder" style="display:none;">🎓</div>
+      <div class="header-titles">
+        <div class="title">Dirección de Bienestar · Universidad Nacional de Moreno</div>
+        <div class="subtitle">Portal de Consultas Estudiantiles</div>
+      </div>
+      <nav class="header-nav" aria-label="Navegación principal">
+        <a href="index.html">Inicio</a>
+        <a href="becas.html">Becas</a>
+        <a href="boleto.html" class="active">Boleto</a>
+        <a href="estacionamiento.html">Estacionamiento</a>
+      </nav>
+      <button class="header-menu-btn" id="menu-btn" aria-label="Abrir menú">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </header>
+  <nav class="mobile-nav" id="mobile-nav" aria-label="Menú mobile">
+    <a href="index.html">Inicio</a>
+    <a href="becas.html">Becas</a>
+    <a href="boleto.html" class="active">Boleto</a>
+    <a href="estacionamiento.html">Estacionamiento</a>
+  </nav>
+
+  <!-- ===== MAIN ===== -->
+  <main>
+    <div class="wizard-page">
+
+      <!-- Volver -->
+      <div id="wizard-wrapper">
+
+      <button class="wizard-back" onclick="history.back()" aria-label="Volver a la página anterior">
+        Volver
+      </button>
+
+      <!-- Título del flujo -->
+      <div class="wizard-header">
+        <h2>🚌 Boleto Especial Educativo (BEE)</h2>
+        <p>Respondé las siguientes preguntas para verificar si cumplís los requisitos del Boleto Especial Educativo de la Provincia de Buenos Aires.</p>
+      </div>
+
+      <!-- Contenedor del wizard -->
+      <div id="wizard-container" aria-live="polite"></div>
+
+      <!-- Formulario de escalada: solo descripción -->
+      <section id="contact-form-section" class="form-section hidden" aria-label="Formulario de contacto">
+        <h3>Contactar a la Dirección de Bienestar</h3>
+        <p>Describí tu consulta y el equipo se comunicará con vos a la brevedad.</p>
+
+        <form id="contact-form" novalidate>
+          <input type="hidden" name="nombre"   />
+          <input type="hidden" name="apellido" />
+          <input type="hidden" name="dni"      />
+          <input type="hidden" name="area" value="Boleto Estudiantil" />
+
+          <div class="form-grid">
+            <div class="form-group full">
+              <label for="descripcion">¿Cuál es tu consulta? <span class="req">*</span></label>
+              <textarea id="descripcion" name="descripcion" rows="5"
+                placeholder="Describí tu consulta sobre el boleto estudiantil..." required></textarea>
+              <span class="field-error" data-error="descripcion">Describí tu consulta.</span>
+            </div>
+          </div>
+
+          <div class="form-submit">
+            <button type="submit" class="btn btn-primary">Enviar consulta</button>
+            <span class="form-mail-hint">
+              O escribinos a
+              <a href="mailto:proyecto.bienestar.moreno@gmail.com">proyecto.bienestar.moreno@gmail.com</a>
+            </span>
+          </div>
+        </form>
+
+        <div class="form-confirm" role="alert" aria-live="polite">
+          <span class="confirm-icon">✅</span>
+          <h3>¡Consulta recibida!</h3>
+          <p>Tu consulta fue registrada. El equipo de Bienestar se comunicará con vos a la brevedad.</p>
+          <a href="index.html" class="btn btn-outline mt-2">Volver al inicio</a>
+        </div>
+      </section>
+
+      <!-- Volver al inicio siempre disponible -->
+      <div class="text-center mt-3">
+        <a href="index.html" class="btn btn-ghost btn-sm">← Volver al inicio</a>
+      </div>
+
+      </div><!-- fin #wizard-wrapper -->
+
+    </div>
+  </main>
+
+  <!-- ===== FOOTER ===== -->
+  <footer class="site-footer" role="contentinfo">
+    <div class="footer-inner">
+      <div class="footer-col">
+        <h4>Dirección de Bienestar</h4>
+        <p>Universidad Nacional de Moreno</p>
+        <p>Av. Bme. Mitre 1891, Moreno</p>
+      </div>
+      <div class="footer-col">
+        <h4>Contacto</h4>
+        <li><a href="mailto:proyecto.bienestar.moreno@gmail.com">proyecto.bienestar.moreno@gmail.com</a></li>
+        <li>Lun–Vie · 9:00 a 17:00 hs</li>
+      </div>
+      <div class="footer-col">
+        <h4>Institucional</h4>
+        <li><a href="https://www.unm.edu.ar/?extension=bienestar-y-asuntos-estudiantiles" target="_blank" rel="noopener">Bienestar y Asuntos Estudiantiles</a></li>
+        <li><a href="https://www.unm.edu.ar" target="_blank" rel="noopener">Sitio oficial UNM</a></li>
+      </div>
+    <div class="footer-bottom">
+      © <span id="year"></span> Universidad Nacional de Moreno · Dirección de Bienestar
+    </div>
+  </footer>
+
+  <script src="js/app.js"></script>
+  <script>
+    document.getElementById('year').textContent = new Date().getFullYear();
+
+    /* ============================================================
+       CONFIGURACIÓN DEL WIZARD — BOLETO ESPECIAL EDUCATIVO (BEE)
+       Requisitos reales según Ley provincial Nº 14.735
+       ============================================================ */
+    var wizardSteps = [
+      {
+        // Pregunta 1 — Alumno regular
+        id: 'p1',
+        question: '¿Sos alumno/a regular de la Universidad? (Los ingresantes deben haber finalizado el nivel medio sin adeudar materias)',
+        options: [
+          {
+            label: '✅ Sí',
+            next: 1
+          },
+          {
+            label: '❌ No',
+            result: {
+              type: 'warning',
+              icon: '⚠️',
+              title: 'Regularidad académica requerida',
+              text: 'El BEE requiere ser alumno/a regular de la Universidad. Si sos ingresante, debés acreditar haber finalizado el nivel medio sin materias adeudadas. Consultá con tu departamento académico para regularizar tu situación antes de iniciar el trámite.'
+            }
+          }
+        ]
+      },
+      {
+        // Pregunta 2 — Sin título previo
+        id: 'p2',
+        question: '¿Poseés algún título universitario o terciario previo?',
+        options: [
+          {
+            label: '❌ No tengo título previo',
+            next: 2
+          },
+          {
+            label: '✅ Sí, tengo título previo',
+            result: {
+              type: 'warning',
+              icon: '⚠️',
+              title: 'Requisito no cumplido: título previo',
+              text: 'El Boleto Especial Educativo está destinado a estudiantes que no poseen título universitario ni terciario. Quienes ya cuentan con un título no acceden a este beneficio según la Ley provincial Nº 14.735.'
+            }
+          }
+        ]
+      },
+      {
+        // Pregunta 3 — Residencia en PBA a más de 2km
+        id: 'p3',
+        question: '¿Residís en la provincia de Buenos Aires a más de 2.000 metros de la Universidad?',
+        options: [
+          {
+            label: '✅ Sí',
+            next: 3
+          },
+          {
+            label: '❌ No (vivo fuera de PBA o a menos de 2km)',
+            result: {
+              type: 'warning',
+              icon: '⚠️',
+              title: 'Requisito de residencia no cumplido',
+              text: 'El BEE requiere residir en la Provincia de Buenos Aires a una distancia mayor a 2.000 metros del establecimiento educativo. Si creés que hay un error en tu domicilio registrado, consultá con Bienestar para revisarlo.'
+            }
+          }
+        ]
+      },
+      {
+        // Pregunta 4 — SUBE registrada
+        id: 'p4',
+        question: '¿Tenés una tarjeta SUBE registrada a tu nombre en www.argentina.gob.ar/sube?',
+        options: [
+          {
+            label: '✅ Sí, la tengo registrada',
+            result: {
+              type: 'success',
+              icon: '✅',
+              title: 'Cumplís los requisitos del BEE',
+              text: 'Cumplís todos los requisitos. Para completar el trámite debés: 1) Completar el formulario de inscripción en el sistema de gestión online de la UNM (solapa "Trámites"). 2) El Ministerio de Transporte te avisará por mail cuando estén disponibles las precargas. Recordá que el beneficio otorga 45 viajes gratuitos por mes.',
+              showForm: false,
+              link: 'https://www.gba.gob.ar/transporte/boletoBEE',
+              linkText: 'Más info sobre el BEE'
+            }
+          },
+          {
+            label: '❌ No, todavía no la registré',
+            result: {
+              type: 'warning',
+              icon: '⚠️',
+              title: 'Registrá tu SUBE primero',
+              text: 'Para acceder al BEE necesitás tener una tarjeta SUBE registrada a tu nombre. Registrala en www.argentina.gob.ar/sube y luego completá la inscripción en el sistema de gestión online de la UNM (solapa "Trámites").',
+              link: 'https://www.argentina.gob.ar/sube',
+              linkText: 'Registrar SUBE'
+            }
+          }
+        ]
+      }
+    ];
+
+    // Mostrar identificación al inicio, luego arrancar el wizard
+    mostrarPantallaIdentificacion('wizard-wrapper', function () {
+      initWizard(wizardSteps, 'wizard-container', 4, 'Boleto Estudiantil');
+      initContactForm('contact-form', 'Boleto Estudiantil');
+    });
+  </script>
+</body>
+</html>

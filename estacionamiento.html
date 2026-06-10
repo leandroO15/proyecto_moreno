@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Estacionamiento · Dirección de Bienestar · UNM</title>
+  <meta name="description" content="Guía interactiva para consultas sobre estacionamiento en el campus de la Universidad Nacional de Moreno." />
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+
+  <!-- ===== HEADER ===== -->
+  <header class="site-header">
+    <div class="header-inner">
+      <img
+        src="logo.png"
+        alt="Universidad Nacional de Moreno"
+        class="header-logo"
+        onerror="this.style.display='none'; document.getElementById('logo-placeholder').style.display='flex';"
+      />
+      <div id="logo-placeholder" class="header-logo-placeholder" style="display:none;">🎓</div>
+      <div class="header-titles">
+        <div class="title">Dirección de Bienestar · Universidad Nacional de Moreno</div>
+        <div class="subtitle">Portal de Consultas Estudiantiles</div>
+      </div>
+      <nav class="header-nav" aria-label="Navegación principal">
+        <a href="index.html">Inicio</a>
+        <a href="becas.html">Becas</a>
+        <a href="boleto.html">Boleto</a>
+        <a href="estacionamiento.html" class="active">Estacionamiento</a>
+      </nav>
+      <button class="header-menu-btn" id="menu-btn" aria-label="Abrir menú">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </header>
+  <nav class="mobile-nav" id="mobile-nav" aria-label="Menú mobile">
+    <a href="index.html">Inicio</a>
+    <a href="becas.html">Becas</a>
+    <a href="boleto.html">Boleto</a>
+    <a href="estacionamiento.html" class="active">Estacionamiento</a>
+  </nav>
+
+  <!-- ===== MAIN ===== -->
+  <main>
+    <div class="wizard-page">
+
+      <!-- Volver -->
+      <div id="wizard-wrapper">
+
+      <button class="wizard-back" onclick="history.back()" aria-label="Volver a la página anterior">
+        Volver
+      </button>
+
+      <!-- Título del flujo -->
+      <div class="wizard-header">
+        <h2>🅿️ Estacionamiento en el Campus</h2>
+        <p>Seleccioná tu tipo de vehículo para obtener la información correspondiente.</p>
+      </div>
+
+      <!-- Barra de progreso -->
+      <div class="progress-bar-wrap" id="progress-wrap">
+        <div class="progress-label">
+          <span id="progress-step-label">Paso 1 de 2</span>
+          <span id="progress-pct-label">0% completado</span>
+        </div>
+        <div class="progress-track">
+          <div class="progress-fill" id="progress-fill" style="width:0%"></div>
+        </div>
+      </div>
+
+      <!-- PASO 1: Selección de vehículo -->
+      <div id="step-1" aria-live="polite">
+        <div class="wizard-card">
+          <p class="wizard-question">¿Qué vehículo utilizás para llegar a la universidad?</p>
+
+          <div class="vehicle-grid" role="group" aria-label="Seleccioná tu vehículo">
+            <button class="vehicle-card" id="btn-moto" aria-label="Seleccionar Moto">
+              <span class="v-icon">🏍️</span>
+              <span class="v-label">Moto</span>
+            </button>
+            <button class="vehicle-card" id="btn-bici" aria-label="Seleccionar Bicicleta">
+              <span class="v-icon">🚲</span>
+              <span class="v-label">Bicicleta</span>
+            </button>
+            <button class="vehicle-card" id="btn-auto" aria-label="Seleccionar Auto">
+              <span class="v-icon">🚗</span>
+              <span class="v-label">Auto</span>
+            </button>
+          </div>
+
+          <!-- Duda no resuelta -->
+          <div class="duda-btn-wrap">
+            <span>¿No encontrás lo que buscás?</span>
+            <button class="btn btn-sm btn-warning" id="duda-paso1">Mi duda no quedó resuelta</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- PASO 2: Solo para Auto — Certificado -->
+      <div id="step-2" class="hidden" aria-live="polite">
+        <div class="wizard-card">
+          <p class="wizard-question">¿Tenés certificado de embarazo o discapacidad?</p>
+          <div class="wizard-options">
+            <button class="btn btn-outline" id="btn-cert-si">✅ Sí</button>
+            <button class="btn btn-outline" id="btn-cert-no">❌ No</button>
+          </div>
+          <!-- Duda no resuelta -->
+          <div class="duda-btn-wrap">
+            <span>¿No encontrás lo que buscás?</span>
+            <button class="btn btn-sm btn-warning" id="duda-paso2">Mi duda no quedó resuelta</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- RESULTADO (oculto hasta selección) -->
+      <div id="result-container" class="hidden" aria-live="polite"></div>
+
+      <!-- Formulario de escalada: solo descripción -->
+      <section id="contact-form-section" class="form-section hidden" aria-label="Formulario de contacto">
+        <h3>Contactar a la Dirección de Bienestar</h3>
+        <p>Describí tu consulta y el equipo se comunicará con vos para resolver tu situación sobre estacionamiento.</p>
+
+        <form id="contact-form" novalidate>
+          <input type="hidden" name="nombre"   />
+          <input type="hidden" name="apellido" />
+          <input type="hidden" name="dni"      />
+          <input type="hidden" name="area" value="Estacionamiento" />
+
+          <div class="form-grid">
+            <div class="form-group full">
+              <label for="descripcion">¿Cuál es tu consulta? <span class="req">*</span></label>
+              <textarea id="descripcion" name="descripcion" rows="5"
+                placeholder="Describí tu consulta sobre estacionamiento..." required></textarea>
+              <span class="field-error" data-error="descripcion">Describí tu consulta.</span>
+            </div>
+          </div>
+
+          <div class="form-submit">
+            <button type="submit" class="btn btn-primary">Enviar consulta</button>
+            <span class="form-mail-hint">
+              O escribinos a
+              <a href="mailto:proyecto.bienestar.moreno@gmail.com">proyecto.bienestar.moreno@gmail.com</a>
+            </span>
+          </div>
+        </form>
+
+        <div class="form-confirm" role="alert" aria-live="polite">
+          <span class="confirm-icon">✅</span>
+          <h3>¡Consulta recibida!</h3>
+          <p>Tu consulta fue registrada. El equipo de Bienestar se comunicará con vos a la brevedad.</p>
+          <a href="index.html" class="btn btn-outline mt-2">Volver al inicio</a>
+        </div>
+      </section>
+
+      <!-- Volver al inicio siempre disponible -->
+      <div class="text-center mt-3">
+        <a href="index.html" class="btn btn-ghost btn-sm">← Volver al inicio</a>
+      </div>
+
+      </div><!-- fin #wizard-wrapper -->
+
+    </div>
+  </main>
+
+  <!-- ===== FOOTER ===== -->
+  <footer class="site-footer" role="contentinfo">
+    <div class="footer-inner">
+      <div class="footer-col">
+        <h4>Dirección de Bienestar</h4>
+        <p>Universidad Nacional de Moreno</p>
+        <p>Av. Bme. Mitre 1891, Moreno</p>
+      </div>
+      <div class="footer-col">
+        <h4>Contacto</h4>
+        <li><a href="mailto:proyecto.bienestar.moreno@gmail.com">proyecto.bienestar.moreno@gmail.com</a></li>
+        <li>Lun–Vie · 9:00 a 17:00 hs</li>
+      </div>
+      <div class="footer-col">
+        <h4>Institucional</h4>
+        <li><a href="https://www.unm.edu.ar/?extension=bienestar-y-asuntos-estudiantiles" target="_blank" rel="noopener">Bienestar y Asuntos Estudiantiles</a></li>
+        <li><a href="https://www.unm.edu.ar" target="_blank" rel="noopener">Sitio oficial UNM</a></li>
+      </div>
+    <div class="footer-bottom">
+      © <span id="year"></span> Universidad Nacional de Moreno · Dirección de Bienestar
+    </div>
+  </footer>
+
+  <script src="js/app.js"></script>
+  <script>
+    document.getElementById('year').textContent = new Date().getFullYear();
+
+    /* ============================================================
+       LÓGICA ESTACIONAMIENTO
+       ============================================================ */
+    var EMAIL = 'proyecto.bienestar.moreno@gmail.com';
+
+    var step1    = document.getElementById('step-1');
+    var step2    = document.getElementById('step-2');
+    var resultEl = document.getElementById('result-container');
+    var progFill = document.getElementById('progress-fill');
+    var progStep = document.getElementById('progress-step-label');
+    var progPct  = document.getElementById('progress-pct-label');
+
+    function setProgress(stepNum, total) {
+      var pct = Math.round(((stepNum - 1) / total) * 100);
+      progFill.style.width = pct + '%';
+      progStep.textContent = 'Paso ' + stepNum + ' de ' + total;
+      progPct.textContent  = pct + '% completado';
+    }
+
+    function registrarConsulta(titulo) {
+      if (!sesionEstudiante) return;
+      var consulta = saveConsulta({
+        nombre:      sesionEstudiante.nombre,
+        apellido:    sesionEstudiante.apellido,
+        dni:         sesionEstudiante.dni,
+        area:        'Estacionamiento',
+        descripcion: titulo,
+        tipo:        'Autogestión'
+      });
+      enviarMail(consulta);
+    }
+
+    function identBanner() {
+      if (!sesionEstudiante) return '';
+      return '<div class="ident-ok">👤 <strong>' + escapeHTML(sesionEstudiante.nombre) + ' ' +
+        escapeHTML(sesionEstudiante.apellido) + '</strong> · DNI ' + escapeHTML(sesionEstudiante.dni) +
+        ' · Consulta registrada ✅</div>';
+    }
+
+    function showResult(type, icon, title, text, extraHTML) {
+      step1.classList.add('hidden');
+      step2.classList.add('hidden');
+      resultEl.classList.remove('hidden');
+      progFill.style.width = '100%';
+      progStep.textContent = 'Resultado';
+      progPct.textContent  = '100% completado';
+
+      var extra = extraHTML || '';
+      resultEl.innerHTML =
+        '<div class="wizard-result">' +
+          '<div class="result-box ' + type + '">' +
+            '<span class="result-icon">' + icon + '</span>' +
+            '<div class="result-content">' +
+              '<h3>' + escapeHTML(title) + '</h3>' +
+              '<p>' + text + '</p>' +
+            '</div>' +
+          '</div>' +
+          extra +
+          identBanner() +
+          '<div class="result-actions">' +
+            '<button class="btn btn-ghost" onclick="resetFlow()">← Reiniciar consulta</button>' +
+            '<button class="btn btn-outline" onclick="showContactForm()">Contactar a Bienestar</button>' +
+          '</div>' +
+        '</div>';
+
+      registrarConsulta(title);
+    }
+
+    function resetFlow() {
+      resultEl.classList.add('hidden');
+      step2.classList.add('hidden');
+      step1.classList.remove('hidden');
+      setProgress(1, 2);
+    }
+
+    function showContactForm() {
+      var section = document.getElementById('contact-form-section');
+      section.classList.remove('hidden');
+      setTimeout(function () {
+        section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 50);
+    }
+
+    // Arrancar el flujo de estacionamiento tras la identificación
+    mostrarPantallaIdentificacion('wizard-wrapper', function () {
+      setProgress(1, 2);
+
+      document.getElementById('btn-moto').addEventListener('click', function () {
+        showResult('info', '🏍️', 'Estacionamiento para Motos',
+          'El estacionamiento para motos está disponible en el sector X del campus. No requiere trámite previo ni certificación adicional. Presentate en la guardia con tu patente.');
+      });
+
+      document.getElementById('btn-bici').addEventListener('click', function () {
+        showResult('info', '🚲', 'Bicicleteros en el Campus',
+          'Contamos con bicicleteros cubiertos en el campus. No requiere trámite previo. Para más información sobre ubicaciones, consultá en la guardia principal.');
+      });
+
+      document.getElementById('btn-auto').addEventListener('click', function () {
+        step1.classList.add('hidden');
+        step2.classList.remove('hidden');
+        setProgress(2, 2);
+      });
+
+      document.getElementById('duda-paso1').addEventListener('click', showContactForm);
+
+      document.getElementById('btn-cert-si').addEventListener('click', function () {
+        var mailSubject = encodeURIComponent('Documentación Estacionamiento Preferencial');
+        var mailBody    = encodeURIComponent('Nombre completo:\nDNI:\nCertificado adjunto: (indicá tipo)\n\nEscribo para cargar mi documentación para el estacionamiento preferencial.');
+        var mailtoHref  = 'mailto:' + EMAIL + '?subject=' + mailSubject + '&body=' + mailBody;
+        var extraHTML =
+          '<div class="result-box info mt-2">' +
+            '<span class="result-icon">📎</span>' +
+            '<div class="result-content">' +
+              '<h3>Cómo enviar tu documentación</h3>' +
+              '<p>Enviá un mail a <a href="' + mailtoHref + '" style="color:#1d4ed8;font-weight:600;">' + EMAIL + '</a> ' +
+              'con el asunto <strong>"Documentación Estacionamiento Preferencial"</strong>. ' +
+              'Incluí tu nombre completo, DNI y el certificado (embarazo o discapacidad).</p>' +
+            '</div>' +
+          '</div>';
+        showResult('success', '✅', 'Acceso a Estacionamiento Preferencial',
+          'Para acceder al estacionamiento preferencial necesitás enviar tu documentación por mail.', extraHTML);
+      });
+
+      document.getElementById('btn-cert-no').addEventListener('click', function () {
+        showResult('warning', '⚠️', 'Estacionamiento Sujeto a Disponibilidad',
+          'El estacionamiento para autos particulares sin certificación especial está sujeto a disponibilidad. Consultá en la guardia del campus sobre los turnos y cupos disponibles.');
+      });
+
+      document.getElementById('duda-paso2').addEventListener('click', showContactForm);
+
+      initContactForm('contact-form', 'Estacionamiento');
+    });
+  </script>
+</body>
+</html>

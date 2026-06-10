@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Becas · Dirección de Bienestar · UNM</title>
+  <meta name="description" content="Guía interactiva para consultas sobre becas estudiantiles en la Universidad Nacional de Moreno." />
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+
+  <!-- ===== HEADER ===== -->
+  <header class="site-header">
+    <div class="header-inner">
+      <img
+        src="logo.png"
+        alt="Universidad Nacional de Moreno"
+        class="header-logo"
+        onerror="this.style.display='none'; document.getElementById('logo-placeholder').style.display='flex';"
+      />
+      <div id="logo-placeholder" class="header-logo-placeholder" style="display:none;">🎓</div>
+      <div class="header-titles">
+        <div class="title">Dirección de Bienestar · Universidad Nacional de Moreno</div>
+        <div class="subtitle">Portal de Consultas Estudiantiles</div>
+      </div>
+      <nav class="header-nav" aria-label="Navegación principal">
+        <a href="index.html">Inicio</a>
+        <a href="becas.html" class="active">Becas</a>
+        <a href="boleto.html">Boleto</a>
+        <a href="estacionamiento.html">Estacionamiento</a>
+      </nav>
+      <button class="header-menu-btn" id="menu-btn" aria-label="Abrir menú">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </header>
+  <nav class="mobile-nav" id="mobile-nav" aria-label="Menú mobile">
+    <a href="index.html">Inicio</a>
+    <a href="becas.html" class="active">Becas</a>
+    <a href="boleto.html">Boleto</a>
+    <a href="estacionamiento.html">Estacionamiento</a>
+  </nav>
+
+  <!-- ===== MAIN ===== -->
+  <main>
+    <div class="wizard-page">
+
+      <!-- Volver -->
+      <div id="wizard-wrapper">
+
+      <button class="wizard-back" onclick="history.back()" aria-label="Volver a la página anterior">
+        Volver
+      </button>
+
+      <!-- Título del flujo -->
+      <div class="wizard-header">
+        <h2>🎓 Becas Estudiantiles</h2>
+        <p>Respondé las siguientes preguntas para saber si cumplís los requisitos y cómo inscribirte.</p>
+      </div>
+
+      <!-- Contenedor del wizard (se renderiza con JS) -->
+      <div id="wizard-container" aria-live="polite"></div>
+
+      <!-- Formulario de escalada: solo descripción (datos ya cargados al inicio) -->
+      <section id="contact-form-section" class="form-section hidden" aria-label="Formulario de contacto">
+        <h3>Contactar a la Dirección de Bienestar</h3>
+        <p>Describí tu consulta y el equipo se comunicará con vos a la brevedad.</p>
+
+        <form id="contact-form" novalidate>
+          <!-- Campos ocultos prellenados por JS con los datos de sesión -->
+          <input type="hidden" name="nombre"   />
+          <input type="hidden" name="apellido" />
+          <input type="hidden" name="dni"      />
+          <input type="hidden" name="area" value="Becas" />
+
+          <div class="form-grid">
+            <div class="form-group full">
+              <label for="descripcion">¿Cuál es tu consulta? <span class="req">*</span></label>
+              <textarea id="descripcion" name="descripcion" rows="5"
+                placeholder="Describí tu consulta sobre becas con el mayor detalle posible..." required></textarea>
+              <span class="field-error" data-error="descripcion">Describí tu consulta.</span>
+            </div>
+          </div>
+
+          <div class="form-submit">
+            <button type="submit" class="btn btn-primary">Enviar consulta</button>
+            <span class="form-mail-hint">
+              O escribinos a
+              <a href="mailto:proyecto.bienestar.moreno@gmail.com">proyecto.bienestar.moreno@gmail.com</a>
+            </span>
+          </div>
+        </form>
+
+        <div class="form-confirm" role="alert" aria-live="polite">
+          <span class="confirm-icon">✅</span>
+          <h3>¡Consulta recibida!</h3>
+          <p>Tu consulta fue registrada. El equipo de Bienestar se comunicará con vos a la brevedad.</p>
+          <a href="index.html" class="btn btn-outline mt-2">Volver al inicio</a>
+        </div>
+      </section>
+
+      <!-- Volver al inicio siempre disponible -->
+      <div class="text-center mt-3">
+        <a href="index.html" class="btn btn-ghost btn-sm">← Volver al inicio</a>
+      </div>
+
+      </div><!-- fin #wizard-wrapper -->
+
+    </div>
+  </main>
+
+  <!-- ===== FOOTER ===== -->
+  <footer class="site-footer" role="contentinfo">
+    <div class="footer-inner">
+      <div class="footer-col">
+        <h4>Dirección de Bienestar</h4>
+        <p>Universidad Nacional de Moreno</p>
+        <p>Av. Bme. Mitre 1891, Moreno</p>
+      </div>
+      <div class="footer-col">
+        <h4>Contacto</h4>
+        <li><a href="mailto:proyecto.bienestar.moreno@gmail.com">proyecto.bienestar.moreno@gmail.com</a></li>
+        <li>Lun–Vie · 9:00 a 17:00 hs</li>
+      </div>
+      <div class="footer-col">
+        <h4>Institucional</h4>
+        <li><a href="https://www.unm.edu.ar/?extension=bienestar-y-asuntos-estudiantiles" target="_blank" rel="noopener">Bienestar y Asuntos Estudiantiles</a></li>
+        <li><a href="https://www.unm.edu.ar" target="_blank" rel="noopener">Sitio oficial UNM</a></li>
+      </div>
+    <div class="footer-bottom">
+      © <span id="year"></span> Universidad Nacional de Moreno · Dirección de Bienestar
+    </div>
+  </footer>
+
+  <script src="js/app.js"></script>
+  <script>
+    document.getElementById('year').textContent = new Date().getFullYear();
+
+    /* ============================================================
+       CONFIGURACIÓN DEL WIZARD — BECAS
+       Flujo con información real de Progresar 2026 y Belgrano
+       ============================================================ */
+    var wizardSteps = [
+      {
+        // Paso 0 — Elegir tipo de beca
+        id: 'p0',
+        question: '¿Sobre qué beca querés consultar?',
+        options: [
+          {
+            label: '📘 Beca Progresar',
+            next: 1
+          },
+          {
+            label: '🏭 Beca Manuel Belgrano',
+            next: 5
+          }
+        ]
+      },
+
+      /* ======= RAMA PROGRESAR ======= */
+      {
+        // P1 — Edad
+        id: 'p1',
+        question: 'PROGRESAR · ¿Tenés entre 17 y 35 años? (el límite se extiende a 30 para estudiantes avanzados/as, a 35 para personas con hijos a cargo en hogares monoparentales, y sin límite para personas trans, con discapacidad, refugiadas, indígenas o afrodescendientes)',
+        options: [
+          {
+            label: '✅ Sí',
+            next: 2
+          },
+          {
+            label: '❌ No',
+            result: {
+              type: 'warning',
+              icon: '⚠️',
+              title: 'Rango de edad no cumplido',
+              text: 'La Beca Progresar 2026 tiene límites de edad: entre 17 y 24 años en general, extendido a 30 para estudiantes avanzados/as y hasta 35 para personas con hijos a cargo en hogares monoparentales. Sin límite de edad para personas trans, con discapacidad, refugiadas, de pueblos indígenas o afrodescendientes.'
+            }
+          }
+        ]
+      },
+      {
+        // P2 — Argentino/DNI
+        id: 'p2',
+        question: 'PROGRESAR · ¿Sos argentino/a nativo/a o naturalizado/a con al menos 5 años de residencia en el país?',
+        options: [
+          {
+            label: '✅ Sí',
+            next: 3
+          },
+          {
+            label: '❌ No',
+            result: {
+              type: 'warning',
+              icon: '⚠️',
+              title: 'Requisito de nacionalidad no cumplido',
+              text: 'La Beca Progresar requiere ser argentino/a nativo/a o naturalizado/a con DNI y al menos 5 años de residencia en el país. Si tenés dudas sobre tu situación migratoria o de residencia, consultá con la Dirección de Bienestar.'
+            }
+          }
+        ]
+      },
+      {
+        // P3 — Ingresos
+        id: 'p3',
+        question: 'PROGRESAR · ¿Los ingresos de tu grupo familiar son menores a 3 salarios mínimos, vitales y móviles?',
+        options: [
+          {
+            label: '✅ Sí',
+            next: 4
+          },
+          {
+            label: '❌ No, superan ese monto',
+            result: {
+              type: 'warning',
+              icon: '⚠️',
+              title: 'Ingresos fuera del límite',
+              text: 'La Beca Progresar requiere que los ingresos del grupo familiar sean menores a 3 salarios mínimos, vitales y móviles. Si tu situación es límite o tenés dudas sobre el cálculo, consultá con el equipo de Bienestar.'
+            }
+          }
+        ]
+      },
+      {
+        // P4 — Estudiante regular + materias aprobadas
+        id: 'p4',
+        question: 'PROGRESAR · ¿Sos estudiante regular y tenés al menos 2 materias aprobadas (o estás ingresando sin adeudar materias del nivel medio)?',
+        options: [
+          {
+            label: '✅ Sí',
+            result: {
+              type: 'success',
+              icon: '✅',
+              title: 'Cumplís los requisitos de la Beca Progresar',
+              text: 'La inscripción 2026 está abierta desde el 6 de abril. Inscribite en: https://www.argentina.gob.ar/educacion/progresar — También podés consultar el reglamento en el Boletín Oficial. Si ya te inscribiste y tenés inconvenientes, contactá a Bienestar.',
+              link: 'https://www.argentina.gob.ar/educacion/progresar',
+              linkText: 'Ir a inscripción Progresar'
+            }
+          },
+          {
+            label: '❌ No',
+            result: {
+              type: 'warning',
+              icon: '⚠️',
+              title: 'Regularidad académica requerida',
+              text: 'Para acceder a la Beca Progresar necesitás ser egresado/a del nivel medio sin adeudar materias y tener al menos 2 materias aprobadas en la universidad (excepto ingresantes). Consultá con tu departamento académico.'
+            }
+          }
+        ]
+      },
+
+      /* ======= RAMA BELGRANO ======= */
+      {
+        // P5 — Carrera habilitada
+        id: 'p5',
+        question: 'BELGRANO · ¿Cursás alguna de estas carreras en la UNM: Ingeniería en Electrónica, Licenciatura en Biotecnología, Licenciatura en Gestión Ambiental o Diseño Multimedial?',
+        options: [
+          {
+            label: '✅ Sí, curso una de esas carreras',
+            next: 6
+          },
+          {
+            label: '❌ No, curso otra carrera',
+            result: {
+              type: 'warning',
+              icon: '⚠️',
+              title: 'Carrera no habilitada para Belgrano',
+              text: 'Las Becas "Manuel Belgrano" están destinadas a carreras estratégicas vinculadas a alimentos, ambiente, computación, energía, minería, movilidad y ciencias básicas. En la UNM aplica solo para: Ingeniería en Electrónica, Biotecnología, Gestión Ambiental y Diseño Multimedial. Podés consultar sobre otras becas disponibles con el equipo de Bienestar.',
+              showForm: true
+            }
+          }
+        ]
+      },
+      {
+        // P6 — Período de inscripción
+        id: 'p6',
+        question: 'BELGRANO · ¿Ya revisaste que la inscripción esté abierta? (La convocatoria 2026 cerró el 3 de abril)',
+        options: [
+          {
+            label: '✅ Sí, quiero inscribirme',
+            result: {
+              type: 'info',
+              icon: 'ℹ️',
+              title: 'Inscripción Beca Manuel Belgrano',
+              text: 'La convocatoria 2026 tuvo fecha límite el 3 de abril. Si la inscripción ya cerró, podés anotarte para la próxima convocatoria o consultar si hay extensiones de plazo. Inscripción en: https://becasmanuelbelgrano.educacion.gob.ar',
+              link: 'https://becasmanuelbelgrano.educacion.gob.ar/ingreso_postulantes.php',
+              linkText: 'Ir al portal de Belgrano'
+            }
+          },
+          {
+            label: '❌ Tengo dudas sobre el estado',
+            result: {
+              type: 'success',
+              icon: '✅',
+              title: 'Consultá con Bienestar',
+              text: 'El equipo de Bienestar puede orientarte sobre el estado de la convocatoria, próximas fechas o cómo seguir el proceso de tu postulación.',
+              showForm: true
+            }
+          }
+        ]
+      },
+      {
+        // P7 — Estudiante regular
+        id: 'p7',
+        question: 'BELGRANO · ¿Sos estudiante regular de la UNM?',
+        options: [
+          {
+            label: '✅ Sí',
+            result: {
+              type: 'success',
+              icon: '✅',
+              title: 'Cumplís los requisitos de la Beca Belgrano',
+              text: 'Podés postularte a la Beca "Manuel Belgrano" en becasmanuelbelgrano.educacion.gob.ar. Esta beca promueve el ingreso, continuidad y graduación en carreras estratégicas para el desarrollo del país. Si ya te postulaste y tenés inconvenientes, completá el formulario para que Bienestar te asista.',
+              link: 'https://becasmanuelbelgrano.educacion.gob.ar/ingreso_postulantes.php',
+              linkText: 'Ir a la inscripción'
+            }
+          },
+          {
+            label: '❌ No',
+            result: {
+              type: 'warning',
+              icon: '⚠️',
+              title: 'Regularidad académica requerida',
+              text: 'Para acceder a la Beca "Manuel Belgrano" necesitás ser estudiante regular de la UNM. Consultá con tu departamento académico sobre cómo regularizar tu situación.'
+            }
+          }
+        ]
+      }
+    ];
+
+    initWizard(wizardSteps, 'wizard-container', 4, 'Becas');
+    initContactForm('contact-form', 'Becas');
+
+    // Mostrar pantalla de identificación al inicio; el wizard arranca después
+    mostrarPantallaIdentificacion('wizard-wrapper', function () {
+      initWizard(wizardSteps, 'wizard-container', 4, 'Becas');
+      initContactForm('contact-form', 'Becas');
+    });
+  </script>
+</body>
+</html>
