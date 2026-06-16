@@ -3,32 +3,28 @@
  *
  * Flujo:
  *  1. Estudiante ingresa Nombre, Apellido y DNI antes de arrancar el wizard.
- *  2. Cada resultado del wizard guarda la consulta en Supabase (Autogestión).
- *  3. Si escala, solo ingresa la descripción — los datos de identidad ya están.
- *  4. Todas las consultas se envían también por mail via Google Apps Script.
+ *  2. Cada resultado guarda la consulta en Supabase (Autogestión).
+ *  3. Si escala, la consulta previa se ACTUALIZA a Escalada — sin duplicados.
+ *  4. Mail via Google Apps Script solo para consultas Escaladas.
  */
 
 /* ============================================================
-   CONFIGURACIÓN SUPABASE
+   CONFIGURACIÓN
    ============================================================ */
-const SUPABASE_URL = 'https://uqksnltvpqmsjtajrfar.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVxa3NubHR2cHFtc2p0YWpyZmFyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODExMTIxNDUsImV4cCI6MjA5NjY4ODE0NX0.Cm3htm58b3X_hQHi8K-jF45HyZK9vSVNBiFGkmjdgyg';
-
-/* ============================================================
-   OTRAS CONSTANTES
-   ============================================================ */
+const SUPABASE_URL    = 'https://uqksnltvpqmsjtajrfar.supabase.co';
+const SUPABASE_KEY    = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVxa3NubHR2cHFtc2p0YWpyZmFyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODExMTIxNDUsImV4cCI6MjA5NjY4ODE0NX0.Cm3htm58b3X_hQHi8K-jF45HyZK9vSVNBiFGkmjdgyg';
 const EMAIL_BIENESTAR = 'proyecto.bienestar.moreno@gmail.com';
 const GAS_URL         = 'https://script.google.com/macros/s/AKfycbzJVjaQNgbKoxw-vK5rjbUvkyLhiCXmEmLFLYQEil4hdRfBiXPODqo_NCNI4CZxSYqHkA/exec';
 
 /* ============================================================
    SESIÓN DEL ESTUDIANTE
+   Guarda nombre, apellido, dni e id de la consulta activa en Supabase.
    ============================================================ */
-let sesionEstudiante = null; // { nombre, apellido, dni }
+let sesionEstudiante = null; // { nombre, apellido, dni, consultaId? }
 
 /* ============================================================
    UTILIDADES
    ============================================================ */
-
 function escapeHTML(str) {
   if (str === null || str === undefined) return '';
   const d = document.createElement('div');
@@ -38,21 +34,23 @@ function escapeHTML(str) {
 
 function formatDateTime(iso) {
   const d = new Date(iso);
-  return d.toLocaleDateString('es-AR', {
-    day: '2-digit', month: '2-digit', year: 'numeric'
-  }) + ' ' + d.toLocaleTimeString('es-AR', {
-    hour: '2-digit', minute: '2-digit'
-  });
+  return d.toLocaleDateString('es-AR', { day:'2-digit', month:'2-digit', year:'numeric' })
+    + ' ' + d.toLocaleTimeString('es-AR', { hour:'2-digit', minute:'2-digit' });
+}
+
+function sbHeaders(extra = {}) {
+  return {
+    'Content-Type':  'application/json',
+    'apikey':        SUPABASE_KEY,
+    'Authorization': `Bearer ${SUPABASE_KEY}`,
+    'Prefer':        'return=representation',
+    ...extra
+  };
 }
 
 /* ============================================================
-   GUARDAR CONSULTA EN SUPABASE
+   SUPABASE — GUARDAR CONSULTA (Autogestión)
    ============================================================ */
-
-/**
- * Inserta una consulta en la tabla `consultas` de Supabase.
- * Retorna una Promise con el registro creado.
- */
 async function saveConsulta(data) {
   const payload = {
     nombre:      (data.nombre      || '').trim(),
@@ -61,40 +59,46 @@ async function saveConsulta(data) {
     area:        data.area         || '',
     descripcion: (data.descripcion || '').trim(),
     tipo:        data.tipo         || 'Autogestión',
-    estado:      'Pendiente'
+    estado:      'Pendiente',
+    archivado:   false
   };
 
   try {
     const res = await fetch(`${SUPABASE_URL}/rest/v1/consultas`, {
       method:  'POST',
-      headers: {
-        'Content-Type':  'application/json',
-        'apikey':        SUPABASE_KEY,
-        'Authorization': `Bearer ${SUPABASE_KEY}`,
-        'Prefer':        'return=representation'
-      },
-      body: JSON.stringify(payload)
+      headers: sbHeaders(),
+      body:    JSON.stringify(payload)
     });
-
-    if (!res.ok) {
-      const err = await res.text();
-      console.error('Supabase error:', err);
-      return payload;
-    }
-
+    if (!res.ok) { console.error('Supabase POST error:', await res.text()); return payload; }
     const rows = await res.json();
     return rows[0] || payload;
-
-  } catch (e) {
+  } catch(e) {
     console.error('Error guardando consulta:', e);
     return payload;
   }
 }
 
 /* ============================================================
-   ENVÍO DE MAIL VIA GOOGLE APPS SCRIPT
+   SUPABASE — ACTUALIZAR consulta existente a Escalada
+   Se llama cuando el estudiante decide contactar a Bienestar
+   después de haber llegado a un resultado (para evitar duplicados).
    ============================================================ */
+async function escalarConsulta(id, descripcion) {
+  try {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/consultas?id=eq.${id}`, {
+      method:  'PATCH',
+      headers: sbHeaders(),
+      body:    JSON.stringify({ tipo: 'Escalada', descripcion })
+    });
+    if (!res.ok) console.error('Supabase PATCH error:', await res.text());
+  } catch(e) {
+    console.error('Error escalando consulta:', e);
+  }
+}
 
+/* ============================================================
+   MAIL VIA GOOGLE APPS SCRIPT
+   ============================================================ */
 function enviarMail(consulta) {
   fetch(GAS_URL, {
     method:  'POST',
@@ -105,17 +109,16 @@ function enviarMail(consulta) {
       apellido:    consulta.apellido,
       dni:         consulta.dni,
       area:        consulta.area,
-      descripcion: consulta.descripcion || '(consulta autogestión — sin descripción adicional)',
+      descripcion: consulta.descripcion || '(sin descripción adicional)',
       tipo:        consulta.tipo,
       fecha:       formatDateTime(consulta.timestamp || new Date().toISOString())
     })
-  }).catch(() => console.warn('Mail no enviado — consulta guardada en Supabase.'));
+  }).catch(() => console.warn('Mail no enviado.'));
 }
 
 /* ============================================================
    PANTALLA DE IDENTIFICACIÓN INICIAL
    ============================================================ */
-
 function mostrarPantallaIdentificacion(wrapperId, onIdentificado) {
   const wrapper = document.getElementById(wrapperId);
   if (!wrapper) return;
@@ -145,14 +148,14 @@ function mostrarPantallaIdentificacion(wrapperId, onIdentificado) {
           <span class="field-error" id="err-ident-dni">DNI inválido (7 u 8 dígitos).</span>
         </div>
       </div>
-      <button class="btn btn-primary" id="ident-btn-confirmar" style="margin-top:1rem;width:100%;justify-content:center;">
+      <button class="btn btn-primary" id="ident-btn-confirmar"
+        style="margin-top:1rem;width:100%;justify-content:center;">
         Comenzar consulta →
       </button>
     </div>`;
 
   wrapper.parentNode.insertBefore(pantalla, wrapper);
   wrapper.style.display = 'none';
-
   setTimeout(() => document.getElementById('ident-nombre')?.focus(), 100);
 
   function confirmar() {
@@ -161,13 +164,11 @@ function mostrarPantallaIdentificacion(wrapperId, onIdentificado) {
     const dni      = document.getElementById('ident-dni').value.trim();
     let ok = true;
 
-    const campos = [
+    [
       { val: nombre,   errId: 'err-ident-nombre',   inputId: 'ident-nombre',   check: v => v.length > 0 },
       { val: apellido, errId: 'err-ident-apellido',  inputId: 'ident-apellido', check: v => v.length > 0 },
       { val: dni,      errId: 'err-ident-dni',       inputId: 'ident-dni',      check: v => /^\d{7,8}$/.test(v) }
-    ];
-
-    campos.forEach(({ val, errId, inputId, check }) => {
+    ].forEach(({ val, errId, inputId, check }) => {
       const valid = check(val);
       document.getElementById(errId)?.classList.toggle('visible', !valid);
       document.getElementById(inputId)?.classList.toggle('error', !valid);
@@ -176,8 +177,7 @@ function mostrarPantallaIdentificacion(wrapperId, onIdentificado) {
 
     if (!ok) return;
 
-    sesionEstudiante = { nombre, apellido, dni };
-
+    sesionEstudiante = { nombre, apellido, dni, consultaId: null };
     pantalla.style.opacity = '0';
     pantalla.style.transition = 'opacity .25s';
     setTimeout(() => {
@@ -188,15 +188,17 @@ function mostrarPantallaIdentificacion(wrapperId, onIdentificado) {
   }
 
   document.getElementById('ident-btn-confirmar').addEventListener('click', confirmar);
-  pantalla.querySelectorAll('input').forEach(input => {
-    input.addEventListener('keydown', e => { if (e.key === 'Enter') confirmar(); });
-  });
+  pantalla.querySelectorAll('input').forEach(input =>
+    input.addEventListener('keydown', e => { if (e.key === 'Enter') confirmar(); })
+  );
 }
 
 /* ============================================================
-   FORMULARIO DE ESCALADA (solo descripción)
+   FORMULARIO DE ESCALADA
+   Cuando el estudiante llegó a un resultado (consulta ya guardada),
+   actualiza esa consulta a Escalada en vez de crear una nueva.
+   Si no hay consultaId (vino del botón libre), crea una nueva.
    ============================================================ */
-
 function initContactForm(formId, areaDefault) {
   const form = document.getElementById(formId);
   if (!form) return;
@@ -216,8 +218,7 @@ function initContactForm(formId, areaDefault) {
         if (group) group.style.display = 'none';
       }
     });
-    const existing = form.querySelector('.ident-prefill-banner');
-    if (!existing) {
+    if (!form.querySelector('.ident-prefill-banner')) {
       const banner = document.createElement('div');
       banner.className = 'ident-prefill-banner';
       banner.innerHTML = `👤 <strong>${escapeHTML(sesionEstudiante.nombre)} ${escapeHTML(sesionEstudiante.apellido)}</strong> · DNI ${escapeHTML(sesionEstudiante.dni)}`;
@@ -225,7 +226,7 @@ function initContactForm(formId, areaDefault) {
     }
   }
 
-  form.addEventListener('submit', async function (e) {
+  form.addEventListener('submit', async function(e) {
     e.preventDefault();
 
     const descField = form.querySelector('[name="descripcion"]');
@@ -238,31 +239,45 @@ function initContactForm(formId, areaDefault) {
     descField.classList.remove('error');
     descErr?.classList.remove('visible');
 
+    const btn = form.querySelector('[type="submit"]');
+    if (btn) { btn.disabled = true; btn.textContent = 'Enviando...'; }
+
     const ident = sesionEstudiante || {
       nombre:   form.querySelector('[name="nombre"]')?.value  || '',
       apellido: form.querySelector('[name="apellido"]')?.value || '',
       dni:      form.querySelector('[name="dni"]')?.value      || ''
     };
 
-    const data = {
-      nombre:      ident.nombre,
-      apellido:    ident.apellido,
-      dni:         ident.dni,
-      area:        form.querySelector('[name="area"]')?.value || areaDefault || '',
-      descripcion: descField.value,
-      tipo:        'Escalada'
-    };
+    let consulta;
 
-    // Deshabilitar botón mientras guarda
-    const btn = form.querySelector('[type="submit"]');
-    if (btn) { btn.disabled = true; btn.textContent = 'Enviando...'; }
+    if (sesionEstudiante?.consultaId) {
+      // Ya existe una consulta de autogestión → actualizar a Escalada (sin duplicar)
+      await escalarConsulta(sesionEstudiante.consultaId, descField.value);
+      consulta = {
+        nombre:   ident.nombre,
+        apellido: ident.apellido,
+        dni:      ident.dni,
+        area:     form.querySelector('[name="area"]')?.value || areaDefault || '',
+        descripcion: descField.value,
+        tipo:     'Escalada',
+        timestamp: new Date().toISOString()
+      };
+    } else {
+      // Sin consulta previa → crear nueva Escalada
+      consulta = await saveConsulta({
+        nombre:      ident.nombre,
+        apellido:    ident.apellido,
+        dni:         ident.dni,
+        area:        form.querySelector('[name="area"]')?.value || areaDefault || '',
+        descripcion: descField.value,
+        tipo:        'Escalada'
+      });
+    }
 
-    const consulta = await saveConsulta(data);
     enviarMail(consulta);
     showFormConfirm(form);
   });
 
-  // Observer para prefill cuando la sección se hace visible
   const observer = new MutationObserver(() => {
     const section = form.closest('.form-section');
     if (section && !section.classList.contains('hidden')) {
@@ -285,7 +300,6 @@ function showFormConfirm(form) {
 /* ============================================================
    WIZARD ENGINE
    ============================================================ */
-
 function initWizard(steps, containerId, totalSteps, areaForm) {
   const container = document.getElementById(containerId);
   if (!container) return;
@@ -297,7 +311,7 @@ function initWizard(steps, containerId, totalSteps, areaForm) {
     const step = steps[stepIndex];
     container.innerHTML = '';
 
-    const pct          = Math.round(((visibleNum - 1) / totalSteps) * 100);
+    const pct         = Math.round(((visibleNum - 1) / totalSteps) * 100);
     const progressHTML = buildProgress(`Paso ${visibleNum} de ${totalSteps}`, pct);
     const optionsHTML  = step.options.map(opt =>
       `<button class="btn btn-outline wizard-opt" data-opt='${JSON.stringify(opt)}'>${escapeHTML(opt.label)}</button>`
@@ -313,11 +327,11 @@ function initWizard(steps, containerId, totalSteps, areaForm) {
         </div>
       </div>`;
 
-    container.querySelectorAll('.wizard-opt').forEach(btn => {
-      btn.addEventListener('click', function () {
+    container.querySelectorAll('.wizard-opt').forEach(btn =>
+      btn.addEventListener('click', function() {
         handleOption(JSON.parse(this.getAttribute('data-opt')), visibleNum);
-      });
-    });
+      })
+    );
     container.querySelector('.show-form-btn').addEventListener('click', () => showContactForm(areaForm));
   }
 
@@ -347,6 +361,11 @@ function initWizard(steps, containerId, totalSteps, areaForm) {
       ? `<div class="ident-ok">👤 <strong>${escapeHTML(ident.nombre)} ${escapeHTML(ident.apellido)}</strong> · DNI ${escapeHTML(ident.dni)} · Consulta registrada ✅</div>`
       : '';
 
+    // URL de vuelta al inicio (raíz del sitio)
+    const backUrl = window.location.pathname.includes('/proyectomoreno/')
+      ? '/proyectomoreno/index.html'
+      : 'index.html';
+
     container.innerHTML = progressHTML + `
       <div class="wizard-result">
         <div class="result-box ${result.type}">
@@ -359,12 +378,12 @@ function initWizard(steps, containerId, totalSteps, areaForm) {
         ${identBanner}
         <div class="result-actions">
           ${linkBtnHTML}
-          <button class="btn btn-ghost" onclick="location.reload()">← Volver al inicio</button>
+          <a href="${backUrl}" class="btn btn-ghost">← Volver al inicio</a>
           <button class="btn btn-outline show-form-btn-result">Contactar a Bienestar</button>
         </div>
       </div>`;
 
-    // Guardar consulta en Supabase
+    // Guardar consulta Autogestión y guardar el id en sesión
     if (ident) {
       const consulta = await saveConsulta({
         nombre:      ident.nombre,
@@ -374,7 +393,12 @@ function initWizard(steps, containerId, totalSteps, areaForm) {
         descripcion: result.title || '',
         tipo:        'Autogestión'
       });
-      enviarMail(consulta);
+      // Guardar el id para poder actualizar a Escalada sin duplicar
+      if (consulta.id && sesionEstudiante) {
+        sesionEstudiante.consultaId = consulta.id;
+      }
+      // Mail solo si el resultado requiere acción (success con showForm)
+      // Para autogestión no enviamos mail para no saturar la casilla
     }
 
     container.querySelector('.show-form-btn-result')?.addEventListener('click', () => showContactForm(areaForm));
@@ -410,7 +434,7 @@ function buildProgress(label, pct) {
 }
 
 /* ============================================================
-   HEADER ACTIVE LINK
+   HEADER ACTIVE LINK + HAMBURGUESA
    ============================================================ */
 function initActiveNav() {
   const path = window.location.pathname.split('/').pop() || 'index.html';
@@ -421,19 +445,15 @@ function initActiveNav() {
 
 document.addEventListener('DOMContentLoaded', function() {
   initActiveNav();
-
-  // Menú hamburguesa mobile
   const menuBtn   = document.getElementById('menu-btn');
   const mobileNav = document.getElementById('mobile-nav');
   if (menuBtn && mobileNav) {
     menuBtn.addEventListener('click', function() {
       mobileNav.classList.toggle('open');
-      const isOpen = mobileNav.classList.contains('open');
-      menuBtn.setAttribute('aria-expanded', isOpen);
+      menuBtn.setAttribute('aria-expanded', mobileNav.classList.contains('open'));
     });
-    // Cerrar al hacer click en un link
-    mobileNav.querySelectorAll('a').forEach(a => {
-      a.addEventListener('click', () => mobileNav.classList.remove('open'));
-    });
+    mobileNav.querySelectorAll('a').forEach(a =>
+      a.addEventListener('click', () => mobileNav.classList.remove('open'))
+    );
   }
 });

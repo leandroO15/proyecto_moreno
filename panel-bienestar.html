@@ -6,21 +6,51 @@
   <title>Panel de Seguimiento · Dirección de Bienestar · UNM</title>
   <meta name="robots" content="noindex, nofollow" />
   <link rel="stylesheet" href="css/styles.css" />
+  <link rel="icon" type="image/png" href="logo2.png" />
   <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
   <style>
-    body { background: var(--gris-claro); }
+    body { background: var(--fondo-base); }
     .admin-login { display: flex; }
+
     .login-form-group { display:flex; flex-direction:column; gap:.4rem; text-align:left; margin-bottom:1rem; }
     .login-form-group label { font-size:.87rem; font-weight:600; color:var(--negro); }
     .login-form-group input { width:100%; padding:.65rem 1rem; font-size:.95rem; }
-    .admin-table-wrap { background:var(--gris-claro); }
+
+    .admin-table-wrap { background:var(--fondo-base); }
     .filter-group { display:flex; align-items:center; gap:.5rem; }
     .filter-group label { font-size:.82rem; font-weight:600; color:var(--gris-texto); white-space:nowrap; }
-    .filter-group select { font-size:.82rem; padding:.35rem .6rem; min-width:130px; }
-    .toolbar-sep { width:1px; height:28px; background:var(--gris-medio); margin:0 .25rem; }
+    .filter-group select { font-size:.82rem; padding:.35rem .6rem; min-width:120px; }
+    .toolbar-sep { width:1px; height:28px; background:var(--gris-borde); margin:0 .25rem; flex-shrink:0; }
+
+    /* Toggle archivados */
+    .archive-toggle {
+      display: inline-flex;
+      align-items: center;
+      gap: .4rem;
+      font-size: .8rem;
+      font-weight: 600;
+      color: var(--gris-texto);
+      cursor: pointer;
+      padding: .38rem .75rem;
+      border-radius: 6px;
+      border: 1.5px solid var(--gris-borde);
+      background: var(--blanco);
+      transition: all .2s;
+      white-space: nowrap;
+    }
+    .archive-toggle:hover { border-color: var(--azul-medio); color: var(--azul-medio); }
+    .archive-toggle.active { background: #fef3c7; border-color: #f59e0b; color: #92400e; }
+
+    /* Fila archivada */
+    .row-archivada td { opacity: .45; }
+
+    .loading-state { text-align:center; padding:3rem; color:var(--gris-texto); font-size:.95rem; }
     .badge-escalada    { background:#fee2e2; color:#991b1b; }
     .badge-autogestion { background:#dcfce7; color:#166534; }
-    .loading-state { text-align:center; padding:3rem; color:var(--gris-texto); font-size:.95rem; }
+
+    /* Stat histórico */
+    .stat-chip.historico { border: 1.5px dashed var(--gris-borde); background: var(--fondo-sutil); }
+    .stat-chip.historico .stat-num { color: var(--gris-texto); }
   </style>
 </head>
 <body>
@@ -63,7 +93,21 @@
     </div>
 
     <!-- Toolbar -->
-    <div class="admin-toolbar">
+    <div class="admin-toolbar" style="flex-wrap:wrap;gap:.6rem;">
+
+      <!-- Buscador por DNI o apellido -->
+      <div class="filter-group" style="flex:1;min-width:200px;max-width:320px;">
+        <label for="buscar">🔍</label>
+        <input
+          type="text"
+          id="buscar"
+          placeholder="Buscar por DNI o apellido..."
+          style="font-size:.82rem;padding:.35rem .7rem;width:100%;"
+          autocomplete="off"
+        />
+      </div>
+
+      <!-- Filtros -->
       <div class="filter-group">
         <label for="filtro-area">Área:</label>
         <select id="filtro-area">
@@ -91,33 +135,56 @@
           <option value="Autogestión">🟢 Autogestión</option>
         </select>
       </div>
+
+      <!-- Limpiar filtros -->
+      <button class="btn btn-ghost btn-sm" id="btn-limpiar-filtros" title="Limpiar filtros">
+        ✕ Limpiar filtros
+      </button>
+
       <div class="toolbar-sep"></div>
+
+      <!-- Toggle archivados -->
+      <button class="archive-toggle" id="btn-toggle-archivados" title="Mostrar/ocultar casos archivados">
+        📦 Ver archivados
+      </button>
+
+      <div class="toolbar-sep"></div>
+
+      <!-- Acciones -->
       <button class="btn btn-primary btn-sm" id="btn-exportar">⬇️ Exportar Excel</button>
-      <button class="btn btn-warning btn-sm" id="btn-limpiar">🧹 Limpiar resueltos</button>
+      <button class="btn btn-warning btn-sm" id="btn-archivar-resueltos" title="Archivar casos resueltos">
+        📦 Archivar resueltos
+      </button>
       <button class="btn btn-ghost btn-sm" id="btn-recargar">🔄 Recargar</button>
     </div>
 
     <!-- Stats -->
     <div class="admin-stats">
+      <!-- Stats activos (sin archivados) -->
       <div class="stat-chip">
         <span class="stat-num" id="stat-total">—</span>
-        <span class="stat-label">Total</span>
+        <span class="stat-label">Activos</span>
       </div>
       <div class="stat-chip">
         <span class="stat-num" id="stat-pendiente" style="color:#d97706;">—</span>
         <span class="stat-label">Pendientes</span>
       </div>
       <div class="stat-chip">
-        <span class="stat-num" id="stat-proceso" style="color:var(--azul-medio);">—</span>
+        <span class="stat-num" id="stat-proceso" style="color:var(--azul-claro);">—</span>
         <span class="stat-label">En proceso</span>
-      </div>
-      <div class="stat-chip">
-        <span class="stat-num" id="stat-resuelto" style="color:var(--verde);">—</span>
-        <span class="stat-label">Resueltos</span>
       </div>
       <div class="stat-chip">
         <span class="stat-num" id="stat-escaladas" style="color:#dc2626;">—</span>
         <span class="stat-label">Escaladas</span>
+      </div>
+      <!-- Stats históricos (incluye archivados) -->
+      <div class="stat-chip historico" title="Total histórico incluyendo archivados">
+        <span class="stat-num" id="stat-historico-total">—</span>
+        <span class="stat-label">Total histórico</span>
+      </div>
+      <div class="stat-chip historico" title="Total de escaladas históricas">
+        <span class="stat-num" id="stat-historico-escaladas" style="color:#dc2626;">—</span>
+        <span class="stat-label">Escaladas hist.</span>
       </div>
     </div>
 
@@ -143,82 +210,96 @@
       </table>
     </div>
 
-    <div class="footer-bottom" style="background:var(--azul-oscuro);margin:0;padding:1rem 2rem;">
+    <div style="background:var(--azul-institucional);padding:1rem 2rem;text-align:center;font-size:.76rem;color:rgba(255,255,255,.35);letter-spacing:.02em;">
       © <span id="year"></span> Universidad Nacional de Moreno · Dirección de Bienestar
     </div>
   </div>
 
   <script>
   /* ============================================================
-     CONFIGURACIÓN
+     CONFIG
      ============================================================ */
-  const SB_URL  = 'https://uqksnltvpqmsjtajrfar.supabase.co';
-  const SB_KEY  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVxa3NubHR2cHFtc2p0YWpyZmFyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODExMTIxNDUsImV4cCI6MjA5NjY4ODE0NX0.Cm3htm58b3X_hQHi8K-jF45HyZK9vSVNBiFGkmjdgyg';
-  const PASS    = 'bienestar2024';
+  const SB_URL = 'https://uqksnltvpqmsjtajrfar.supabase.co';
+  const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVxa3NubHR2cHFtc2p0YWpyZmFyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODExMTIxNDUsImV4cCI6MjA5NjY4ODE0NX0.Cm3htm58b3X_hQHi8K-jF45HyZK9vSVNBiFGkmjdgyg';
+  const PASS   = 'bienestar2024';
 
   document.getElementById('year').textContent = new Date().getFullYear();
+
+  let mostrarArchivados = false;
 
   /* ============================================================
      SUPABASE HELPERS
      ============================================================ */
-
-  function sbHeaders() {
+  function sbH(extra = {}) {
     return {
       'apikey':        SB_KEY,
       'Authorization': `Bearer ${SB_KEY}`,
       'Content-Type':  'application/json',
-      'Prefer':        'return=representation'
+      'Prefer':        'return=minimal',
+      ...extra
     };
   }
 
-  async function fetchConsultas(filtros = {}) {
-    let url = `${SB_URL}/rest/v1/consultas?order=timestamp.desc`;
+  // Todas las consultas sin filtro (para stats históricos)
+  async function fetchTodas() {
+    const res = await fetch(`${SB_URL}/rest/v1/consultas?select=*&order=timestamp.desc`, {
+      headers: { ...sbH(), 'Prefer': 'return=representation' }
+    });
+    if (!res.ok) throw new Error(await res.text());
+    return res.json();
+  }
+
+  // Consultas con filtros aplicados
+  async function fetchFiltradas(filtros, incluirArchivados) {
+    let url = `${SB_URL}/rest/v1/consultas?select=*&order=timestamp.desc`;
+
+    // Archivados
+    url += incluirArchivados ? '' : '&archivado=eq.false';
+
     if (filtros.area)   url += `&area=eq.${encodeURIComponent(filtros.area)}`;
     if (filtros.estado) url += `&estado=eq.${encodeURIComponent(filtros.estado)}`;
     if (filtros.tipo)   url += `&tipo=eq.${encodeURIComponent(filtros.tipo)}`;
 
-    const res = await fetch(url, { headers: sbHeaders() });
-    if (!res.ok) throw new Error(await res.text());
-    return res.json();
-  }
-
-  async function fetchTodasConsultas() {
-    const res = await fetch(`${SB_URL}/rest/v1/consultas?order=timestamp.desc`, {
-      headers: sbHeaders()
+    const res = await fetch(url, {
+      headers: { ...sbH(), 'Prefer': 'return=representation' }
     });
     if (!res.ok) throw new Error(await res.text());
     return res.json();
   }
 
-  async function updateEstado(id, nuevoEstado) {
+  async function patchConsulta(id, campos) {
     const res = await fetch(`${SB_URL}/rest/v1/consultas?id=eq.${id}`, {
       method:  'PATCH',
-      headers: sbHeaders(),
-      body:    JSON.stringify({ estado: nuevoEstado })
+      headers: sbH(),
+      body:    JSON.stringify(campos)
     });
-    if (!res.ok) console.error('Error actualizando estado:', await res.text());
+    if (!res.ok) {
+      const err = await res.text();
+      console.error('PATCH error:', err);
+      alert('Error al actualizar: ' + err);
+    }
   }
 
-  async function deleteConsulta(id) {
-    const res = await fetch(`${SB_URL}/rest/v1/consultas?id=eq.${id}`, {
-      method:  'DELETE',
-      headers: sbHeaders()
-    });
-    if (!res.ok) console.error('Error eliminando consulta:', await res.text());
+  async function archivarConsulta(id) {
+    await patchConsulta(id, { archivado: true });
   }
 
-  async function deleteResueltos() {
-    const res = await fetch(`${SB_URL}/rest/v1/consultas?estado=eq.Resuelto`, {
-      method:  'DELETE',
-      headers: sbHeaders()
+  async function archivarResueltos() {
+    const res = await fetch(`${SB_URL}/rest/v1/consultas?estado=eq.Resuelto&archivado=eq.false`, {
+      method:  'PATCH',
+      headers: sbH(),
+      body:    JSON.stringify({ archivado: true })
     });
-    if (!res.ok) console.error('Error limpiando resueltos:', await res.text());
+    if (!res.ok) {
+      const err = await res.text();
+      console.error('PATCH resueltos error:', err);
+      alert('Error al archivar: ' + err);
+    }
   }
 
   /* ============================================================
      UTILIDADES
      ============================================================ */
-
   function escapeHTML(str) {
     if (!str) return '';
     const d = document.createElement('div');
@@ -229,14 +310,13 @@
   function formatDateTime(iso) {
     if (!iso) return '';
     const d = new Date(iso);
-    return d.toLocaleDateString('es-AR', { day:'2-digit', month:'2-digit', year:'numeric' }) +
-      ' ' + d.toLocaleTimeString('es-AR', { hour:'2-digit', minute:'2-digit' });
+    return d.toLocaleDateString('es-AR', { day:'2-digit', month:'2-digit', year:'numeric' })
+      + ' ' + d.toLocaleTimeString('es-AR', { hour:'2-digit', minute:'2-digit' });
   }
 
   /* ============================================================
      LOGIN
      ============================================================ */
-
   const loginSection = document.getElementById('admin-login');
   const adminPanel   = document.getElementById('admin-panel');
   const loginError   = document.getElementById('login-error');
@@ -267,33 +347,40 @@
   });
 
   /* ============================================================
-     RENDER
+     STATS
      ============================================================ */
+  function renderStats(todas, activas) {
+    // Stats activos (sin archivados)
+    const sinArch = activas.filter(c => !c.archivado);
+    document.getElementById('stat-total').textContent     = sinArch.length;
+    document.getElementById('stat-pendiente').textContent = sinArch.filter(c => c.estado === 'Pendiente').length;
+    document.getElementById('stat-proceso').textContent   = sinArch.filter(c => c.estado === 'En proceso').length;
+    document.getElementById('stat-escaladas').textContent = sinArch.filter(c => c.tipo === 'Escalada').length;
 
-  async function cargarPanel() {
-    await aplicarFiltros();
+    // Stats históricos (todo, incluye archivados)
+    document.getElementById('stat-historico-total').textContent     = todas.length;
+    document.getElementById('stat-historico-escaladas').textContent = todas.filter(c => c.tipo === 'Escalada').length;
   }
 
-  function renderStats(todas) {
-    document.getElementById('stat-total').textContent     = todas.length;
-    document.getElementById('stat-pendiente').textContent = todas.filter(c => c.estado === 'Pendiente').length;
-    document.getElementById('stat-proceso').textContent   = todas.filter(c => c.estado === 'En proceso').length;
-    document.getElementById('stat-resuelto').textContent  = todas.filter(c => c.estado === 'Resuelto').length;
-    document.getElementById('stat-escaladas').textContent = todas.filter(c => c.tipo === 'Escalada').length;
-  }
-
+  /* ============================================================
+     TABLA
+     ============================================================ */
   function renderTabla(consultas) {
     const tbody = document.getElementById('tabla-body');
     tbody.innerHTML = '';
 
     if (!consultas.length) {
-      tbody.innerHTML = '<tr><td colspan="9" class="empty-state">' +
-        '<div class="empty-icon">🔍</div><p>No hay consultas que coincidan.</p></td></tr>';
+      tbody.innerHTML = '<tr><td colspan="9" class="empty-state">'
+        + '<div class="empty-icon">🔍</div><p>No hay consultas que coincidan.</p></td></tr>';
       return;
     }
 
     consultas.forEach(c => {
       const tr = document.createElement('tr');
+      tr.setAttribute('data-searchable', '1');
+      tr.setAttribute('data-dni',      c.dni      || '');
+      tr.setAttribute('data-apellido', c.apellido || '');
+      if (c.archivado) tr.classList.add('row-archivada');
 
       const badgeEstado = c.estado === 'En proceso' ? 'badge-proceso'
                         : c.estado === 'Resuelto'   ? 'badge-resuelto'
@@ -308,22 +395,28 @@
         ? escapeHTML(c.descripcion)
         : '<em style="color:#94a3b8;">Sin descripción</em>';
 
+      // Botón de acción: archivar o indicar archivado
+      const accionBtn = c.archivado
+        ? '<span style="font-size:.75rem;color:#94a3b8;">Archivado</span>'
+        : `<button class="btn btn-sm btn-warning archive-btn" data-id="${c.id}" title="Archivar">📦</button>`;
+
       tr.innerHTML =
-        `<td>${escapeHTML(formatDateTime(c.timestamp))}</td>` +
-        `<td>${escapeHTML(c.nombre)}</td>` +
-        `<td>${escapeHTML(c.apellido)}</td>` +
-        `<td>${escapeHTML(c.dni)}</td>` +
-        `<td><span class="badge ${badgeEstado}">${escapeHTML(c.area)}</span></td>` +
-        `<td>${badgeTipo}</td>` +
-        `<td class="desc-cell">${desc}</td>` +
-        `<td>
-          <select class="status-select" data-id="${c.id}">
-            <option value="Pendiente"  ${c.estado==='Pendiente'  ? 'selected':''}>Pendiente</option>
-            <option value="En proceso" ${c.estado==='En proceso' ? 'selected':''}>En proceso</option>
-            <option value="Resuelto"   ${c.estado==='Resuelto'   ? 'selected':''}>Resuelto</option>
-          </select>
-        </td>` +
-        `<td><button class="btn btn-sm btn-danger delete-btn" data-id="${c.id}" title="Eliminar">🗑️</button></td>`;
+        `<td>${escapeHTML(formatDateTime(c.timestamp))}</td>`
+        + `<td>${escapeHTML(c.nombre)}</td>`
+        + `<td>${escapeHTML(c.apellido)}</td>`
+        + `<td>${escapeHTML(c.dni)}</td>`
+        + `<td><span class="badge ${badgeEstado}">${escapeHTML(c.area)}</span></td>`
+        + `<td>${badgeTipo}</td>`
+        + `<td class="desc-cell">${desc}</td>`
+        + `<td>${c.archivado
+            ? `<span class="badge badge-resuelto">Archivado</span>`
+            : `<select class="status-select" data-id="${c.id}">
+                <option value="Pendiente"  ${c.estado==='Pendiente'  ? 'selected':''}>Pendiente</option>
+                <option value="En proceso" ${c.estado==='En proceso' ? 'selected':''}>En proceso</option>
+                <option value="Resuelto"   ${c.estado==='Resuelto'   ? 'selected':''}>Resuelto</option>
+              </select>`
+          }</td>`
+        + `<td>${accionBtn}</td>`;
 
       tbody.appendChild(tr);
     });
@@ -331,16 +424,16 @@
     // Cambio de estado
     tbody.querySelectorAll('.status-select').forEach(sel => {
       sel.addEventListener('change', async function() {
-        await updateEstado(this.getAttribute('data-id'), this.value);
+        await patchConsulta(this.getAttribute('data-id'), { estado: this.value });
         await aplicarFiltros();
       });
     });
 
-    // Eliminar
-    tbody.querySelectorAll('.delete-btn').forEach(btn => {
+    // Archivar
+    tbody.querySelectorAll('.archive-btn').forEach(btn => {
       btn.addEventListener('click', async function() {
-        if (confirm('¿Eliminar esta consulta?')) {
-          await deleteConsulta(this.getAttribute('data-id'));
+        if (confirm('¿Archivar esta consulta? Seguirá visible en el historial.')) {
+          await archivarConsulta(this.getAttribute('data-id'));
           await aplicarFiltros();
         }
       });
@@ -348,12 +441,18 @@
   }
 
   /* ============================================================
-     FILTROS
+     CARGAR PANEL Y FILTROS
      ============================================================ */
+  async function cargarPanel() {
+    await aplicarFiltros();
+  }
 
   async function aplicarFiltros() {
     const tbody = document.getElementById('tabla-body');
     tbody.innerHTML = '<tr><td colspan="9" class="loading-state">Cargando...</td></tr>';
+
+    // Limpiar el buscador al recargar desde Supabase
+    document.getElementById('buscar').value = '';
 
     try {
       const filtros = {
@@ -362,35 +461,73 @@
         tipo:   document.getElementById('filtro-tipo').value
       };
 
-      // Stats siempre del total sin filtros
-      const [filtradas, todas] = await Promise.all([
-        fetchConsultas(filtros),
-        fetchTodasConsultas()
+      const [todas, filtradas] = await Promise.all([
+        fetchTodas(),
+        fetchFiltradas(filtros, mostrarArchivados)
       ]);
 
-      renderStats(todas);
+      renderStats(todas, todas.filter(c => !c.archivado));
       renderTabla(filtradas);
 
     } catch(e) {
       tbody.innerHTML = `<tr><td colspan="9" class="empty-state" style="color:var(--rojo);">
-        Error cargando datos: ${escapeHTML(e.message)}</td></tr>`;
+        Error: ${escapeHTML(e.message)}</td></tr>`;
+      console.error(e);
     }
   }
 
+  /* ============================================================
+     EVENTOS TOOLBAR
+     ============================================================ */
   document.getElementById('filtro-area').addEventListener('change',   aplicarFiltros);
   document.getElementById('filtro-estado').addEventListener('change', aplicarFiltros);
   document.getElementById('filtro-tipo').addEventListener('change',   aplicarFiltros);
   document.getElementById('btn-recargar').addEventListener('click',   aplicarFiltros);
 
-  /* ============================================================
-     EXPORTAR XLSX
-     ============================================================ */
+  // Búsqueda por DNI o apellido (filtrado client-side sobre los resultados ya cargados)
+  document.getElementById('buscar').addEventListener('input', function() {
+    const q = this.value.trim().toLowerCase();
+    const filas = document.querySelectorAll('#tabla-body tr[data-searchable]');
+    filas.forEach(tr => {
+      const dni      = (tr.getAttribute('data-dni')      || '').toLowerCase();
+      const apellido = (tr.getAttribute('data-apellido') || '').toLowerCase();
+      tr.style.display = (!q || dni.includes(q) || apellido.includes(q)) ? '' : 'none';
+    });
+  });
 
+  // Limpiar filtros
+  document.getElementById('btn-limpiar-filtros').addEventListener('click', () => {
+    document.getElementById('filtro-area').value   = '';
+    document.getElementById('filtro-estado').value = '';
+    document.getElementById('filtro-tipo').value   = '';
+    aplicarFiltros();
+  });
+
+  // Toggle archivados
+  document.getElementById('btn-toggle-archivados').addEventListener('click', function() {
+    mostrarArchivados = !mostrarArchivados;
+    this.classList.toggle('active', mostrarArchivados);
+    this.textContent = mostrarArchivados ? '📦 Ocultar archivados' : '📦 Ver archivados';
+    aplicarFiltros();
+  });
+
+  // Archivar resueltos
+  document.getElementById('btn-archivar-resueltos').addEventListener('click', async () => {
+    const todas = await fetchTodas();
+    const n = todas.filter(c => c.estado === 'Resuelto' && !c.archivado).length;
+    if (!n) { alert('No hay casos resueltos para archivar.'); return; }
+    if (!confirm(`¿Archivar los ${n} caso(s) con estado "Resuelto"? Seguirán en el historial.`)) return;
+    await archivarResueltos();
+    await aplicarFiltros();
+  });
+
+  /* ============================================================
+     EXPORTAR XLSX — incluye todos (activos + archivados)
+     ============================================================ */
   document.getElementById('btn-exportar').addEventListener('click', async () => {
     try {
-      const consultas = await fetchTodasConsultas();
+      const consultas = await fetchTodas();
       if (!consultas.length) { alert('No hay consultas para exportar.'); return; }
-
       if (typeof XLSX === 'undefined') { alert('Error: librería Excel no disponible.'); return; }
 
       const rows = consultas.map(c => ({
@@ -401,14 +538,12 @@
         'Área':         c.area,
         'Tipo':         c.tipo || 'Autogestión',
         'Descripción':  c.descripcion || '',
-        'Estado':       c.estado
+        'Estado':       c.estado,
+        'Archivado':    c.archivado ? 'Sí' : 'No'
       }));
 
       const ws = XLSX.utils.json_to_sheet(rows);
-      ws['!cols'] = [
-        {wch:18},{wch:16},{wch:16},{wch:12},
-        {wch:20},{wch:14},{wch:50},{wch:14}
-      ];
+      ws['!cols'] = [{wch:18},{wch:16},{wch:16},{wch:12},{wch:20},{wch:14},{wch:50},{wch:14},{wch:10}];
       const wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws, 'Consultas');
       XLSX.writeFile(wb, `consultas_bienestar_${new Date().toISOString().slice(0,10)}.xlsx`);
@@ -417,20 +552,6 @@
       alert('Error exportando: ' + e.message);
     }
   });
-
-  /* ============================================================
-     LIMPIAR RESUELTOS
-     ============================================================ */
-
-  document.getElementById('btn-limpiar').addEventListener('click', async () => {
-    const todas = await fetchTodasConsultas();
-    const n = todas.filter(c => c.estado === 'Resuelto').length;
-    if (!n) { alert('No hay consultas resueltas para limpiar.'); return; }
-    if (!confirm(`¿Eliminar las ${n} consulta(s) con estado "Resuelto"? No se puede deshacer.`)) return;
-    await deleteResueltos();
-    await aplicarFiltros();
-  });
-
   </script>
 </body>
 </html>
