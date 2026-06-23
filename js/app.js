@@ -2,10 +2,10 @@
  * app.js — Dirección de Bienestar · Universidad Nacional de Moreno
  *
  * Flujo:
- *  1. Estudiante ingresa Nombre, Apellido y DNI antes de arrancar el wizard.
- *  2. Cada resultado guarda la consulta en Supabase (Autogestión).
- *  3. Si escala, la consulta previa se ACTUALIZA a Escalada — sin duplicados.
- *  4. Mail via Google Apps Script solo para consultas Escaladas.
+ *  1. Estudiante ingresa Nombre, Apellido, DNI y Email antes de arrancar el wizard.
+ *  2. Cada resultado guarda la consulta en Supabase (Autogestión → estado Resuelto).
+ *  3. Si escala, la consulta previa se ACTUALIZA a "A resolver" — sin duplicados.
+ *  4. Mail via Google Apps Script solo para consultas "A resolver".
  */
 
 /* ============================================================
@@ -18,9 +18,8 @@ const GAS_URL         = 'https://script.google.com/macros/s/AKfycbzJVjaQNgbKoxw-
 
 /* ============================================================
    SESIÓN DEL ESTUDIANTE
-   Guarda nombre, apellido, dni e id de la consulta activa en Supabase.
    ============================================================ */
-let sesionEstudiante = null; // { nombre, apellido, dni, consultaId? }
+let sesionEstudiante = null; // { nombre, apellido, dni, email, consultaId? }
 
 /* ============================================================
    UTILIDADES
@@ -49,17 +48,21 @@ function sbHeaders(extra = {}) {
 }
 
 /* ============================================================
-   SUPABASE — GUARDAR CONSULTA (Autogestión)
+   SUPABASE — GUARDAR CONSULTA
+   Autogestión → estado "Resuelto" (se resolvió solo con la guía)
+   A resolver  → estado "Pendiente" (necesita atención del equipo)
    ============================================================ */
 async function saveConsulta(data) {
+  const esAutogestion = (data.tipo || 'Autogestión') === 'Autogestión';
   const payload = {
     nombre:      (data.nombre      || '').trim(),
     apellido:    (data.apellido    || '').trim(),
     dni:         (data.dni         || '').trim(),
+    email:       (data.email       || '').trim(),
     area:        data.area         || '',
     descripcion: (data.descripcion || '').trim(),
     tipo:        data.tipo         || 'Autogestión',
-    estado:      'Pendiente',
+    estado:      esAutogestion ? 'Resuelto' : 'Pendiente',
     archivado:   false
   };
 
@@ -79,16 +82,14 @@ async function saveConsulta(data) {
 }
 
 /* ============================================================
-   SUPABASE — ACTUALIZAR consulta existente a Escalada
-   Se llama cuando el estudiante decide contactar a Bienestar
-   después de haber llegado a un resultado (para evitar duplicados).
+   SUPABASE — ACTUALIZAR consulta existente a "A resolver"
    ============================================================ */
 async function escalarConsulta(id, descripcion) {
   try {
     const res = await fetch(`${SUPABASE_URL}/rest/v1/consultas?id=eq.${id}`, {
       method:  'PATCH',
       headers: sbHeaders(),
-      body:    JSON.stringify({ tipo: 'Escalada', descripcion })
+      body:    JSON.stringify({ tipo: 'A resolver', estado: 'Pendiente', descripcion })
     });
     if (!res.ok) console.error('Supabase PATCH error:', await res.text());
   } catch(e) {
@@ -108,6 +109,7 @@ function enviarMail(consulta) {
       nombre:      consulta.nombre,
       apellido:    consulta.apellido,
       dni:         consulta.dni,
+      email:       consulta.email || '',
       area:        consulta.area,
       descripcion: consulta.descripcion || '(sin descripción adicional)',
       tipo:        consulta.tipo,
@@ -147,6 +149,11 @@ function mostrarPantallaIdentificacion(wrapperId, onIdentificado) {
           <input type="text" id="ident-dni" placeholder="Ej: 38123456" inputmode="numeric" maxlength="8" />
           <span class="field-error" id="err-ident-dni">DNI inválido (7 u 8 dígitos).</span>
         </div>
+        <div class="form-group" style="grid-column: 1 / -1;">
+          <label for="ident-email">Email <span class="req">*</span></label>
+          <input type="email" id="ident-email" placeholder="tu@email.com" autocomplete="email" />
+          <span class="field-error" id="err-ident-email">Ingresá un email válido.</span>
+        </div>
       </div>
       <button class="btn btn-primary" id="ident-btn-confirmar"
         style="margin-top:1rem;width:100%;justify-content:center;">
@@ -162,12 +169,14 @@ function mostrarPantallaIdentificacion(wrapperId, onIdentificado) {
     const nombre   = document.getElementById('ident-nombre').value.trim();
     const apellido = document.getElementById('ident-apellido').value.trim();
     const dni      = document.getElementById('ident-dni').value.trim();
+    const email    = document.getElementById('ident-email').value.trim();
     let ok = true;
 
     [
       { val: nombre,   errId: 'err-ident-nombre',   inputId: 'ident-nombre',   check: v => v.length > 0 },
       { val: apellido, errId: 'err-ident-apellido',  inputId: 'ident-apellido', check: v => v.length > 0 },
-      { val: dni,      errId: 'err-ident-dni',       inputId: 'ident-dni',      check: v => /^\d{7,8}$/.test(v) }
+      { val: dni,      errId: 'err-ident-dni',       inputId: 'ident-dni',      check: v => /^\d{7,8}$/.test(v) },
+      { val: email,    errId: 'err-ident-email',     inputId: 'ident-email',    check: v => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v) }
     ].forEach(({ val, errId, inputId, check }) => {
       const valid = check(val);
       document.getElementById(errId)?.classList.toggle('visible', !valid);
@@ -177,7 +186,7 @@ function mostrarPantallaIdentificacion(wrapperId, onIdentificado) {
 
     if (!ok) return;
 
-    sesionEstudiante = { nombre, apellido, dni, consultaId: null };
+    sesionEstudiante = { nombre, apellido, dni, email, consultaId: null };
     pantalla.style.opacity = '0';
     pantalla.style.transition = 'opacity .25s';
     setTimeout(() => {
@@ -245,32 +254,35 @@ function initContactForm(formId, areaDefault) {
     const ident = sesionEstudiante || {
       nombre:   form.querySelector('[name="nombre"]')?.value  || '',
       apellido: form.querySelector('[name="apellido"]')?.value || '',
-      dni:      form.querySelector('[name="dni"]')?.value      || ''
+      dni:      form.querySelector('[name="dni"]')?.value      || '',
+      email:    ''
     };
 
     let consulta;
 
     if (sesionEstudiante?.consultaId) {
-      // Ya existe una consulta de autogestión → actualizar a Escalada (sin duplicar)
+      // Ya existe una consulta de autogestión → actualizar a "A resolver"
       await escalarConsulta(sesionEstudiante.consultaId, descField.value);
       consulta = {
-        nombre:   ident.nombre,
-        apellido: ident.apellido,
-        dni:      ident.dni,
-        area:     form.querySelector('[name="area"]')?.value || areaDefault || '',
+        nombre:      ident.nombre,
+        apellido:    ident.apellido,
+        dni:         ident.dni,
+        email:       ident.email || '',
+        area:        form.querySelector('[name="area"]')?.value || areaDefault || '',
         descripcion: descField.value,
-        tipo:     'Escalada',
-        timestamp: new Date().toISOString()
+        tipo:        'A resolver',
+        timestamp:   new Date().toISOString()
       };
     } else {
-      // Sin consulta previa → crear nueva Escalada
+      // Sin consulta previa → crear nueva "A resolver"
       consulta = await saveConsulta({
         nombre:      ident.nombre,
         apellido:    ident.apellido,
         dni:         ident.dni,
+        email:       ident.email || '',
         area:        form.querySelector('[name="area"]')?.value || areaDefault || '',
         descripcion: descField.value,
-        tipo:        'Escalada'
+        tipo:        'A resolver'
       });
     }
 
@@ -383,12 +395,13 @@ function initWizard(steps, containerId, totalSteps, areaForm) {
         </div>
       </div>`;
 
-    // Guardar consulta Autogestión y guardar el id en sesión
+    // Guardar consulta Autogestión → estado Resuelto
     if (ident) {
       const consulta = await saveConsulta({
         nombre:      ident.nombre,
         apellido:    ident.apellido,
         dni:         ident.dni,
+        email:       ident.email || '',
         area:        areaForm,
         descripcion: result.title || '',
         tipo:        'Autogestión'

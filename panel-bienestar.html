@@ -22,35 +22,26 @@
     .filter-group select { font-size:.82rem; padding:.35rem .6rem; min-width:120px; }
     .toolbar-sep { width:1px; height:28px; background:var(--gris-borde); margin:0 .25rem; flex-shrink:0; }
 
-    /* Toggle archivados */
     .archive-toggle {
-      display: inline-flex;
-      align-items: center;
-      gap: .4rem;
-      font-size: .8rem;
-      font-weight: 600;
-      color: var(--gris-texto);
-      cursor: pointer;
-      padding: .38rem .75rem;
-      border-radius: 6px;
-      border: 1.5px solid var(--gris-borde);
-      background: var(--blanco);
-      transition: all .2s;
-      white-space: nowrap;
+      display:inline-flex; align-items:center; gap:.4rem; font-size:.8rem; font-weight:600;
+      color:var(--gris-texto); cursor:pointer; padding:.38rem .75rem; border-radius:6px;
+      border:1.5px solid var(--gris-borde); background:var(--blanco); transition:all .2s; white-space:nowrap;
     }
-    .archive-toggle:hover { border-color: var(--azul-medio); color: var(--azul-medio); }
-    .archive-toggle.active { background: #fef3c7; border-color: #f59e0b; color: #92400e; }
+    .archive-toggle:hover { border-color:var(--azul-medio); color:var(--azul-medio); }
+    .archive-toggle.active { background:#fef3c7; border-color:#f59e0b; color:#92400e; }
 
-    /* Fila archivada */
-    .row-archivada td { opacity: .45; }
-
+    .row-archivada td { opacity:.45; }
     .loading-state { text-align:center; padding:3rem; color:var(--gris-texto); font-size:.95rem; }
-    .badge-escalada    { background:#fee2e2; color:#991b1b; }
-    .badge-autogestion { background:#dcfce7; color:#166534; }
 
-    /* Stat histórico */
-    .stat-chip.historico { border: 1.5px dashed var(--gris-borde); background: var(--fondo-sutil); }
-    .stat-chip.historico .stat-num { color: var(--gris-texto); }
+    /* Badges unificados — misma paleta para tipo y estado */
+    .badge-resuelto    { background:#dcfce7; color:#166534; }   /* verde  */
+    .badge-pendiente   { background:#fee2e2; color:#991b1b; }   /* rojo   */
+    .badge-proceso     { background:#fef3c7; color:#92400e; }   /* amarillo */
+    .badge-autogestion { background:#dcfce7; color:#166534; }   /* verde  */
+    .badge-a-resolver  { background:#fee2e2; color:#991b1b; }   /* rojo   */
+
+    .stat-chip.historico { border:1.5px dashed var(--gris-borde); background:var(--fondo-sutil); }
+    .stat-chip.historico .stat-num { color:var(--gris-texto); }
   </style>
 </head>
 <body>
@@ -95,16 +86,11 @@
     <!-- Toolbar -->
     <div class="admin-toolbar" style="flex-wrap:wrap;gap:.6rem;">
 
-      <!-- Buscador por DNI o apellido -->
-      <div class="filter-group" style="flex:1;min-width:200px;max-width:320px;">
+      <!-- Buscador -->
+      <div class="filter-group" style="flex:1;min-width:200px;max-width:300px;">
         <label for="buscar">🔍</label>
-        <input
-          type="text"
-          id="buscar"
-          placeholder="Buscar por DNI o apellido..."
-          style="font-size:.82rem;padding:.35rem .7rem;width:100%;"
-          autocomplete="off"
-        />
+        <input type="text" id="buscar" placeholder="Buscar DNI o apellido..."
+          style="font-size:.82rem;padding:.35rem .7rem;width:100%;" autocomplete="off" />
       </div>
 
       <!-- Filtros -->
@@ -131,60 +117,49 @@
         <label for="filtro-tipo">Tipo:</label>
         <select id="filtro-tipo">
           <option value="">Todos</option>
-          <option value="Escalada">🔴 Escalada</option>
+          <option value="A resolver">🔴 A resolver</option>
           <option value="Autogestión">🟢 Autogestión</option>
         </select>
       </div>
 
-      <!-- Limpiar filtros -->
-      <button class="btn btn-ghost btn-sm" id="btn-limpiar-filtros" title="Limpiar filtros">
-        ✕ Limpiar filtros
-      </button>
+      <button class="btn btn-ghost btn-sm" id="btn-limpiar-filtros">✕ Limpiar filtros</button>
 
       <div class="toolbar-sep"></div>
 
-      <!-- Toggle archivados -->
-      <button class="archive-toggle" id="btn-toggle-archivados" title="Mostrar/ocultar casos archivados">
-        📦 Ver archivados
-      </button>
+      <button class="archive-toggle" id="btn-toggle-archivados">📦 Ver archivados</button>
 
       <div class="toolbar-sep"></div>
 
-      <!-- Acciones -->
       <button class="btn btn-primary btn-sm" id="btn-exportar">⬇️ Exportar Excel</button>
-      <button class="btn btn-warning btn-sm" id="btn-archivar-resueltos" title="Archivar casos resueltos">
-        📦 Archivar resueltos
-      </button>
+      <button class="btn btn-warning btn-sm" id="btn-archivar-resueltos">📦 Archivar resueltos</button>
       <button class="btn btn-ghost btn-sm" id="btn-recargar">🔄 Recargar</button>
     </div>
 
     <!-- Stats -->
     <div class="admin-stats">
-      <!-- Stats activos (sin archivados) -->
       <div class="stat-chip">
         <span class="stat-num" id="stat-total">—</span>
         <span class="stat-label">Activos</span>
       </div>
       <div class="stat-chip">
-        <span class="stat-num" id="stat-pendiente" style="color:#d97706;">—</span>
+        <span class="stat-num" id="stat-pendiente" style="color:#dc2626;">—</span>
         <span class="stat-label">Pendientes</span>
       </div>
       <div class="stat-chip">
-        <span class="stat-num" id="stat-proceso" style="color:var(--azul-claro);">—</span>
+        <span class="stat-num" id="stat-proceso" style="color:#d97706;">—</span>
         <span class="stat-label">En proceso</span>
       </div>
       <div class="stat-chip">
-        <span class="stat-num" id="stat-escaladas" style="color:#dc2626;">—</span>
-        <span class="stat-label">Escaladas</span>
+        <span class="stat-num" id="stat-a-resolver" style="color:#dc2626;">—</span>
+        <span class="stat-label">A resolver</span>
       </div>
-      <!-- Stats históricos (incluye archivados) -->
       <div class="stat-chip historico" title="Total histórico incluyendo archivados">
         <span class="stat-num" id="stat-historico-total">—</span>
         <span class="stat-label">Total histórico</span>
       </div>
-      <div class="stat-chip historico" title="Total de escaladas históricas">
-        <span class="stat-num" id="stat-historico-escaladas" style="color:#dc2626;">—</span>
-        <span class="stat-label">Escaladas hist.</span>
+      <div class="stat-chip historico" title="A resolver histórico">
+        <span class="stat-num" id="stat-historico-a-resolver" style="color:#dc2626;">—</span>
+        <span class="stat-label">A resolver hist.</span>
       </div>
     </div>
 
@@ -197,6 +172,7 @@
             <th>Nombre</th>
             <th>Apellido</th>
             <th>DNI</th>
+            <th>Email</th>
             <th>Área</th>
             <th>Tipo</th>
             <th>Descripción</th>
@@ -205,7 +181,7 @@
           </tr>
         </thead>
         <tbody id="tabla-body">
-          <tr><td colspan="9" class="loading-state">Cargando consultas...</td></tr>
+          <tr><td colspan="10" class="loading-state">Cargando consultas...</td></tr>
         </tbody>
       </table>
     </div>
@@ -224,7 +200,6 @@
   const PASS   = 'bienestar2024';
 
   document.getElementById('year').textContent = new Date().getFullYear();
-
   let mostrarArchivados = false;
 
   /* ============================================================
@@ -240,7 +215,6 @@
     };
   }
 
-  // Todas las consultas sin filtro (para stats históricos)
   async function fetchTodas() {
     const res = await fetch(`${SB_URL}/rest/v1/consultas?select=*&order=timestamp.desc`, {
       headers: { ...sbH(), 'Prefer': 'return=representation' }
@@ -249,52 +223,29 @@
     return res.json();
   }
 
-  // Consultas con filtros aplicados
   async function fetchFiltradas(filtros, incluirArchivados) {
     let url = `${SB_URL}/rest/v1/consultas?select=*&order=timestamp.desc`;
-
-    // Archivados
     url += incluirArchivados ? '' : '&archivado=eq.false';
-
     if (filtros.area)   url += `&area=eq.${encodeURIComponent(filtros.area)}`;
     if (filtros.estado) url += `&estado=eq.${encodeURIComponent(filtros.estado)}`;
     if (filtros.tipo)   url += `&tipo=eq.${encodeURIComponent(filtros.tipo)}`;
-
-    const res = await fetch(url, {
-      headers: { ...sbH(), 'Prefer': 'return=representation' }
-    });
+    const res = await fetch(url, { headers: { ...sbH(), 'Prefer': 'return=representation' } });
     if (!res.ok) throw new Error(await res.text());
     return res.json();
   }
 
   async function patchConsulta(id, campos) {
     const res = await fetch(`${SB_URL}/rest/v1/consultas?id=eq.${id}`, {
-      method:  'PATCH',
-      headers: sbH(),
-      body:    JSON.stringify(campos)
+      method: 'PATCH', headers: sbH(), body: JSON.stringify(campos)
     });
-    if (!res.ok) {
-      const err = await res.text();
-      console.error('PATCH error:', err);
-      alert('Error al actualizar: ' + err);
-    }
-  }
-
-  async function archivarConsulta(id) {
-    await patchConsulta(id, { archivado: true });
+    if (!res.ok) { const e = await res.text(); console.error('PATCH error:', e); alert('Error: ' + e); }
   }
 
   async function archivarResueltos() {
     const res = await fetch(`${SB_URL}/rest/v1/consultas?estado=eq.Resuelto&archivado=eq.false`, {
-      method:  'PATCH',
-      headers: sbH(),
-      body:    JSON.stringify({ archivado: true })
+      method: 'PATCH', headers: sbH(), body: JSON.stringify({ archivado: true })
     });
-    if (!res.ok) {
-      const err = await res.text();
-      console.error('PATCH resueltos error:', err);
-      alert('Error al archivar: ' + err);
-    }
+    if (!res.ok) { const e = await res.text(); console.error('PATCH resueltos:', e); alert('Error: ' + e); }
   }
 
   /* ============================================================
@@ -350,16 +301,13 @@
      STATS
      ============================================================ */
   function renderStats(todas, activas) {
-    // Stats activos (sin archivados)
     const sinArch = activas.filter(c => !c.archivado);
-    document.getElementById('stat-total').textContent     = sinArch.length;
-    document.getElementById('stat-pendiente').textContent = sinArch.filter(c => c.estado === 'Pendiente').length;
-    document.getElementById('stat-proceso').textContent   = sinArch.filter(c => c.estado === 'En proceso').length;
-    document.getElementById('stat-escaladas').textContent = sinArch.filter(c => c.tipo === 'Escalada').length;
-
-    // Stats históricos (todo, incluye archivados)
-    document.getElementById('stat-historico-total').textContent     = todas.length;
-    document.getElementById('stat-historico-escaladas').textContent = todas.filter(c => c.tipo === 'Escalada').length;
+    document.getElementById('stat-total').textContent      = sinArch.length;
+    document.getElementById('stat-pendiente').textContent  = sinArch.filter(c => c.estado === 'Pendiente').length;
+    document.getElementById('stat-proceso').textContent    = sinArch.filter(c => c.estado === 'En proceso').length;
+    document.getElementById('stat-a-resolver').textContent = sinArch.filter(c => c.tipo === 'A resolver').length;
+    document.getElementById('stat-historico-total').textContent      = todas.length;
+    document.getElementById('stat-historico-a-resolver').textContent = todas.filter(c => c.tipo === 'A resolver').length;
   }
 
   /* ============================================================
@@ -370,7 +318,7 @@
     tbody.innerHTML = '';
 
     if (!consultas.length) {
-      tbody.innerHTML = '<tr><td colspan="9" class="empty-state">'
+      tbody.innerHTML = '<tr><td colspan="10" class="empty-state">'
         + '<div class="empty-icon">🔍</div><p>No hay consultas que coincidan.</p></td></tr>';
       return;
     }
@@ -382,20 +330,21 @@
       tr.setAttribute('data-apellido', c.apellido || '');
       if (c.archivado) tr.classList.add('row-archivada');
 
+      // Badge estado — rojo=Pendiente, amarillo=En proceso, verde=Resuelto
       const badgeEstado = c.estado === 'En proceso' ? 'badge-proceso'
                         : c.estado === 'Resuelto'   ? 'badge-resuelto'
                         : 'badge-pendiente';
 
+      // Área y Tipo usan el mismo color que el estado de la fila
       const tipo = c.tipo || 'Autogestión';
-      const badgeTipo = tipo === 'Escalada'
-        ? '<span class="badge badge-escalada">🔴 Escalada</span>'
-        : '<span class="badge badge-autogestion">🟢 Autogestión</span>';
+      const badgeTipo = tipo === 'A resolver'
+        ? `<span class="badge ${badgeEstado}">A resolver</span>`
+        : `<span class="badge ${badgeEstado}">Autogestión</span>`;
 
       const desc = c.descripcion
         ? escapeHTML(c.descripcion)
         : '<em style="color:#94a3b8;">Sin descripción</em>';
 
-      // Botón de acción: archivar o indicar archivado
       const accionBtn = c.archivado
         ? '<span style="font-size:.75rem;color:#94a3b8;">Archivado</span>'
         : `<button class="btn btn-sm btn-warning archive-btn" data-id="${c.id}" title="Archivar">📦</button>`;
@@ -405,11 +354,12 @@
         + `<td>${escapeHTML(c.nombre)}</td>`
         + `<td>${escapeHTML(c.apellido)}</td>`
         + `<td>${escapeHTML(c.dni)}</td>`
+        + `<td><a href="mailto:${escapeHTML(c.email || '')}" style="color:var(--azul-medio);font-size:.82rem;">${escapeHTML(c.email || '—')}</a></td>`
         + `<td><span class="badge ${badgeEstado}">${escapeHTML(c.area)}</span></td>`
         + `<td>${badgeTipo}</td>`
         + `<td class="desc-cell">${desc}</td>`
         + `<td>${c.archivado
-            ? `<span class="badge badge-resuelto">Archivado</span>`
+            ? '<span class="badge badge-resuelto">Archivado</span>'
             : `<select class="status-select" data-id="${c.id}">
                 <option value="Pendiente"  ${c.estado==='Pendiente'  ? 'selected':''}>Pendiente</option>
                 <option value="En proceso" ${c.estado==='En proceso' ? 'selected':''}>En proceso</option>
@@ -421,7 +371,6 @@
       tbody.appendChild(tr);
     });
 
-    // Cambio de estado
     tbody.querySelectorAll('.status-select').forEach(sel => {
       sel.addEventListener('change', async function() {
         await patchConsulta(this.getAttribute('data-id'), { estado: this.value });
@@ -429,11 +378,10 @@
       });
     });
 
-    // Archivar
     tbody.querySelectorAll('.archive-btn').forEach(btn => {
       btn.addEventListener('click', async function() {
-        if (confirm('¿Archivar esta consulta? Seguirá visible en el historial.')) {
-          await archivarConsulta(this.getAttribute('data-id'));
+        if (confirm('¿Archivar esta consulta? Seguirá en el historial.')) {
+          await patchConsulta(this.getAttribute('data-id'), { archivado: true });
           await aplicarFiltros();
         }
       });
@@ -441,17 +389,13 @@
   }
 
   /* ============================================================
-     CARGAR PANEL Y FILTROS
+     FILTROS Y CARGA
      ============================================================ */
-  async function cargarPanel() {
-    await aplicarFiltros();
-  }
+  async function cargarPanel() { await aplicarFiltros(); }
 
   async function aplicarFiltros() {
     const tbody = document.getElementById('tabla-body');
-    tbody.innerHTML = '<tr><td colspan="9" class="loading-state">Cargando...</td></tr>';
-
-    // Limpiar el buscador al recargar desde Supabase
+    tbody.innerHTML = '<tr><td colspan="10" class="loading-state">Cargando...</td></tr>';
     document.getElementById('buscar').value = '';
 
     try {
@@ -460,42 +404,24 @@
         estado: document.getElementById('filtro-estado').value,
         tipo:   document.getElementById('filtro-tipo').value
       };
-
       const [todas, filtradas] = await Promise.all([
         fetchTodas(),
         fetchFiltradas(filtros, mostrarArchivados)
       ]);
-
       renderStats(todas, todas.filter(c => !c.archivado));
       renderTabla(filtradas);
-
     } catch(e) {
-      tbody.innerHTML = `<tr><td colspan="9" class="empty-state" style="color:var(--rojo);">
+      tbody.innerHTML = `<tr><td colspan="10" class="empty-state" style="color:var(--rojo);">
         Error: ${escapeHTML(e.message)}</td></tr>`;
       console.error(e);
     }
   }
 
-  /* ============================================================
-     EVENTOS TOOLBAR
-     ============================================================ */
   document.getElementById('filtro-area').addEventListener('change',   aplicarFiltros);
   document.getElementById('filtro-estado').addEventListener('change', aplicarFiltros);
   document.getElementById('filtro-tipo').addEventListener('change',   aplicarFiltros);
   document.getElementById('btn-recargar').addEventListener('click',   aplicarFiltros);
 
-  // Búsqueda por DNI o apellido (filtrado client-side sobre los resultados ya cargados)
-  document.getElementById('buscar').addEventListener('input', function() {
-    const q = this.value.trim().toLowerCase();
-    const filas = document.querySelectorAll('#tabla-body tr[data-searchable]');
-    filas.forEach(tr => {
-      const dni      = (tr.getAttribute('data-dni')      || '').toLowerCase();
-      const apellido = (tr.getAttribute('data-apellido') || '').toLowerCase();
-      tr.style.display = (!q || dni.includes(q) || apellido.includes(q)) ? '' : 'none';
-    });
-  });
-
-  // Limpiar filtros
   document.getElementById('btn-limpiar-filtros').addEventListener('click', () => {
     document.getElementById('filtro-area').value   = '';
     document.getElementById('filtro-estado').value = '';
@@ -503,7 +429,6 @@
     aplicarFiltros();
   });
 
-  // Toggle archivados
   document.getElementById('btn-toggle-archivados').addEventListener('click', function() {
     mostrarArchivados = !mostrarArchivados;
     this.classList.toggle('active', mostrarArchivados);
@@ -511,18 +436,27 @@
     aplicarFiltros();
   });
 
-  // Archivar resueltos
   document.getElementById('btn-archivar-resueltos').addEventListener('click', async () => {
     const todas = await fetchTodas();
     const n = todas.filter(c => c.estado === 'Resuelto' && !c.archivado).length;
     if (!n) { alert('No hay casos resueltos para archivar.'); return; }
-    if (!confirm(`¿Archivar los ${n} caso(s) con estado "Resuelto"? Seguirán en el historial.`)) return;
+    if (!confirm(`¿Archivar los ${n} caso(s) resueltos? Seguirán en el historial.`)) return;
     await archivarResueltos();
     await aplicarFiltros();
   });
 
+  // Buscador por DNI o apellido (client-side)
+  document.getElementById('buscar').addEventListener('input', function() {
+    const q = this.value.trim().toLowerCase();
+    document.querySelectorAll('#tabla-body tr[data-searchable]').forEach(tr => {
+      const dni      = (tr.getAttribute('data-dni')      || '').toLowerCase();
+      const apellido = (tr.getAttribute('data-apellido') || '').toLowerCase();
+      tr.style.display = (!q || dni.includes(q) || apellido.includes(q)) ? '' : 'none';
+    });
+  });
+
   /* ============================================================
-     EXPORTAR XLSX — incluye todos (activos + archivados)
+     EXPORTAR XLSX
      ============================================================ */
   document.getElementById('btn-exportar').addEventListener('click', async () => {
     try {
@@ -535,6 +469,7 @@
         'Nombre':       c.nombre,
         'Apellido':     c.apellido,
         'DNI':          c.dni,
+        'Email':        c.email || '',
         'Área':         c.area,
         'Tipo':         c.tipo || 'Autogestión',
         'Descripción':  c.descripcion || '',
@@ -543,11 +478,10 @@
       }));
 
       const ws = XLSX.utils.json_to_sheet(rows);
-      ws['!cols'] = [{wch:18},{wch:16},{wch:16},{wch:12},{wch:20},{wch:14},{wch:50},{wch:14},{wch:10}];
+      ws['!cols'] = [{wch:18},{wch:16},{wch:16},{wch:12},{wch:26},{wch:20},{wch:14},{wch:50},{wch:14},{wch:10}];
       const wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws, 'Consultas');
       XLSX.writeFile(wb, `consultas_bienestar_${new Date().toISOString().slice(0,10)}.xlsx`);
-
     } catch(e) {
       alert('Error exportando: ' + e.message);
     }
